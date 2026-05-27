@@ -1,9 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-function RegisterPage() {
+function LoginPage() {
   const navigate = useNavigate()
-  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -19,26 +18,12 @@ function RegisterPage() {
         color: 'white'
       }}>
         <p onClick={() => navigate('/')} style={{ cursor: 'pointer', fontSize: '14px', marginBottom: '16px', opacity: 0.8 }}>‹ Back</p>
-        <h1 style={{ color: 'white', margin: '0 0 8px', fontSize: '28px', fontWeight: '700' }}>Create account</h1>
-        <p style={{ margin: 0, opacity: 0.7, fontSize: '14px' }}>Join NUS Umbrella Sharing</p>
+        <h1 style={{ color: 'white', margin: '0 0 8px', fontSize: '28px', fontWeight: '700' }}>Welcome back</h1>
+        <p style={{ margin: 0, opacity: 0.7, fontSize: '14px' }}>Log in to your NUS account</p>
       </div>
 
       {/* Form */}
       <div style={{ padding: '32px 24px', display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '400px', margin: '0 auto' }}>
-        <div>
-          <label style={{ fontSize: '11px', fontWeight: '700', letterSpacing: '1px', color: '#555', display: 'block', marginBottom: '8px' }}>FULL NAME</label>
-          <input
-            type="text"
-            placeholder="e.g. Alex Tan"
-            value={name}
-            onChange={e => setName(e.target.value)}
-            style={{
-              width: '100%', padding: '14px', borderRadius: '8px', border: '1px solid #ddd',
-              fontSize: '15px', boxSizing: 'border-box', outline: 'none'
-            }}
-          />
-        </div>
-
         <div>
           <label style={{ fontSize: '11px', fontWeight: '700', letterSpacing: '1px', color: '#555', display: 'block', marginBottom: '8px' }}>NUS EMAIL</label>
           <input
@@ -51,7 +36,6 @@ function RegisterPage() {
               fontSize: '15px', boxSizing: 'border-box', outline: 'none'
             }}
           />
-          <p style={{ fontSize: '12px', color: '#888', marginTop: '6px' }}>Use your NUS or personal email address.</p>
         </div>
 
         <div>
@@ -59,7 +43,7 @@ function RegisterPage() {
           <div style={{ position: 'relative' }}>
             <input
               type={showPassword ? 'text' : 'password'}
-              placeholder="Min. 6 characters"
+              placeholder="Enter your password"
               value={password}
               onChange={e => setPassword(e.target.value)}
               style={{
@@ -71,6 +55,7 @@ function RegisterPage() {
               {showPassword ? '🙈' : '👁️'}
             </span>
           </div>
+          <p onClick={() => {}} style={{ textAlign: 'right', fontSize: '13px', color: '#1a3a33', cursor: 'pointer', marginTop: '8px' }}>Forgot password?</p>
         </div>
 
         <button
@@ -79,16 +64,16 @@ function RegisterPage() {
             width: '100%', padding: '16px', backgroundColor: '#1a3a33', color: 'white',
             border: 'none', borderRadius: '8px', fontSize: '16px', fontWeight: '600', cursor: 'pointer'
           }}>
-          Create Account
+          Log In
         </button>
 
         <p style={{ textAlign: 'center', fontSize: '14px', color: '#666' }}>
-          Already have an account?{' '}
-          <span onClick={() => navigate('/login')} style={{ color: '#1a3a33', fontWeight: '700', cursor: 'pointer' }}>Log in</span>
+          Don't have an account?{' '}
+          <span onClick={() => navigate('/register')} style={{ color: '#1a3a33', fontWeight: '700', cursor: 'pointer' }}>Sign up</span>
         </p>
       </div>
     </div>
   )
 }
 
-export default RegisterPage
+export default LoginPage
