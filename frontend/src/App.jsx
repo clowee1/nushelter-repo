@@ -3,6 +3,11 @@ import LandingPage from './pages/LandingPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import ProfilePage from './pages/ProfilePage'
+import DonatePage from './pages/DonatePage'
+import DonateConditionPage from './pages/DonateConditionPage'
+import DonateLocationPage from './pages/DonateLocationPage'
+import DonateReviewPage from './pages/DonateReviewPage'
+import DonateConfirmedPage from './pages/DonateConfirmedPage'
 
 function App() {
   return (
@@ -12,6 +17,11 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/donate" element={<DonatePage />} />
+        <Route path="/donate/condition" element={<DonateConditionPage />} />
+        <Route path="/donate/location" element={<DonateLocationPage />} />
+        <Route path="/donate/review" element={<DonateReviewPage />} />
+        <Route path="/donate/confirmed" element={<DonateConfirmedPage />} />
       </Routes>
     </BrowserRouter>
   )

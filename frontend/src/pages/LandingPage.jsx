@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom'
 function LandingPage() {
   const navigate = useNavigate()
 
-  const handleUserChoice = async (isExistingUser) => {
+const handleUserChoice = async (isExistingUser) => {
+  try {
     const res = await fetch('http://127.0.0.1:5000/api/existing-user', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -11,7 +12,11 @@ function LandingPage() {
     })
     const data = await res.json()
     navigate(data.redirectTo)
+  } catch (error) {
+    // Backend not running yet, navigate directly
+    navigate(isExistingUser ? '/login' : '/register')
   }
+}
 
   return (
     <div style={{

@@ -95,7 +95,10 @@ function ProfilePage() {
           display: 'flex', justifyContent: 'space-around', padding: '12px 0'
         }}>
           {[{ icon: '🗺️', label: 'Map' }, { icon: '☂️', label: 'Borrow' }, { icon: '🎁', label: 'Donate' }, { icon: '👤', label: 'Profile' }].map(tab => (
-            <div key={tab.label} style={{ textAlign: 'center', cursor: 'pointer' }}>
+            <div key={tab.label} style={{ textAlign: 'center', cursor: 'pointer' }} onClick={() => {
+              if (tab.label === 'Donate') navigate('/donate')
+              if (tab.label === 'Profile') navigate('/profile')
+            }}>
               <div style={{ fontSize: '22px' }}>{tab.icon}</div>
               <p style={{ margin: 0, fontSize: '11px', color: tab.label === 'Profile' ? '#1a3a33' : '#888' }}>{tab.label}</p>
             </div>
