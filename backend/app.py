@@ -32,6 +32,8 @@ def register():
         "email" : email,
         "password" : password
     }
+
+    users.append(new_user) 
     
 
     return {
