@@ -21,13 +21,18 @@ def register():
     email = data["email"]
     password = data["password"]
 
+    for user in users:
+        if user["email"] == email:
+            return {
+                "message" : "Email already exists"
+            }, 400
+        
     new_user = {
         "name" : name,
         "email" : email,
         "password" : password
     }
     
-    users.append(new_user)
 
     return {
         "message": "User registered successfully",
@@ -56,10 +61,15 @@ def logIn():
                 return {
                     "message": "Incorrect password"
                 }, 401 
-        return {
+    return {
         "message": "User not found"
     }, 404
     
+@app.route("/users")
+def getUsers():
+    return {
+        "users" : users
+    }
 
 if __name__ == "__main__":
     app.run(debug=True)
