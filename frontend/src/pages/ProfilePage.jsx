@@ -2,6 +2,12 @@ import { useNavigate } from 'react-router-dom'
 
 function ProfilePage() {
   const navigate = useNavigate()
+  const user = JSON.parse(localStorage.getItem('user') || '{}')
+
+  const handleSignOut = () => {
+    localStorage.removeItem('user')
+    navigate('/')
+  }
 
   return (
     <div style={{ fontFamily: 'sans-serif', minHeight: '100vh', backgroundColor: '#f0f0f0' }}>
@@ -20,8 +26,8 @@ function ProfilePage() {
           display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px'
         }}>👤</div>
         <div>
-          <h2 style={{ margin: 0, fontSize: '18px' }}>Ashleighlimty</h2>
-          <p style={{ margin: 0, fontSize: '13px', opacity: 0.7 }}>ashleighlimty@gmail.com</p>
+          <h2 style={{ margin: 0, fontSize: '18px' }}>{user.name || 'Guest'}</h2>
+          <p style={{ margin: 0, fontSize: '13px', opacity: 0.7 }}>{user.email || ''}</p>
         </div>
       </div>
 
@@ -42,7 +48,7 @@ function ProfilePage() {
             </div>
             <span style={{ color: '#ccc' }}>›</span>
           </div>
-          <p style={{ textAlign: 'center', fontSize: '13px', color: '#1a3a33', marginTop: '16px', cursor: 'pointer' }}>+ Donate another umbrella</p>
+          <p onClick={() => navigate('/donate')} style={{ textAlign: 'center', fontSize: '13px', color: '#1a3a33', marginTop: '16px', cursor: 'pointer' }}>+ Donate another umbrella</p>
         </div>
 
         {/* Stats */}
@@ -81,7 +87,7 @@ function ProfilePage() {
             </div>
           ))}
           <div
-            onClick={() => navigate('/')}
+            onClick={handleSignOut}
             style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', borderTop: '1px solid #f0f0f0' }}>
             <span>🚪</span>
             <span style={{ fontSize: '15px', color: 'red' }}>Sign Out</span>

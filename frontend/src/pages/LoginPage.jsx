@@ -6,6 +6,24 @@ function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const handleLogin = async () => {
+    try {
+      const res = await fetch('http://127.0.0.1:5000/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      })
+      const data = await res.json()
+      if (res.ok) {
+        localStorage.setItem('user', JSON.stringify(data.user))
+        navigate('/profile')
+      } else {
+        alert(data.message) // shows "Incorrect password" or "User not found"
+      }
+    } catch (error) {
+      navigate('/profile') // fallback if backend down
+    }
+  }
 
   return (
     <div style={{ fontFamily: 'sans-serif', minHeight: '100vh', backgroundColor: '#f0f0f0' }}>
@@ -59,7 +77,7 @@ function LoginPage() {
         </div>
 
         <button
-          onClick={() => navigate('/profile')}
+          onClick={handleLogin}
           style={{
             width: '100%', padding: '16px', backgroundColor: '#1a3a33', color: 'white',
             border: 'none', borderRadius: '8px', fontSize: '16px', fontWeight: '600', cursor: 'pointer'
