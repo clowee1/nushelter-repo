@@ -3,6 +3,7 @@ from flask_cors import CORS
 from dotenv import load_dotenv
 import os
 from supabase import create_client
+import random
 
 app = Flask(__name__)
 CORS(app)
@@ -52,15 +53,21 @@ def register():
             "message": "Email already exists"
         }, 400
     
-    supabase.table("users").insert({
+    result = supabase.table("users").insert({
         "name": name,
         "email": email,
         "password": password
     }).execute()
 
+    user = result.data[0]
 
     return {
-        "message": "User registered successfully"
+        "message": "User registered successfully",
+        "user": {
+            "id": user["id"],
+            "name": user["name"],
+            "email": user["email"]
+        }
     }
 
 @app.route("/login", methods=["POST"])
@@ -91,11 +98,52 @@ def login():
     return {
         "message": "Login successful",
         "user": {
+            "id": user["id"],
             "name": user["name"],
             "email": user["email"]
         }
     }
 
+@app.route('/donate', methods=["POST"])
+def donate():
+
+    data = request.get_json()
+
+    user_id = data["user_id"]
+    colour = data["colour"]
+    nickname = data["nickname"]
+
+    last_umbrella = (supabase.table("umbrellas")
+                    .select("umbrella_id")
+                    .order("umbrella_id", desc = True)
+                    .limit(1)
+                    .execute()
+    )
+
+    if not last_umbrella.data:
+        umbrella_id = 1
+    else:
+        umbrella_id = last_umbrella.data[0]["umbrella_id"] + 1
+    
+    umbrella_code = f"NUS-{umbrella_id:03d}"
+
+    supabase.table("umbrellas").insert({
+        "umbrella_id": umbrella_id,
+        "umbrella_code": umbrella_code,
+        "user_id": user_id,
+        "colour": colour,
+        "nickname": nickname,
+        "status": "Available"
+    }).execute()
+
+    return {
+        "message": "Umbrella registered successfully",
+        "umbrella": {
+            "umbrella_id": umbrella_id,
+            "umbrella_code": umbrella_code,
+            "status": "Available"
+        }
+    }
 
 if __name__ == "__main__":
     app.run(debug=True)
