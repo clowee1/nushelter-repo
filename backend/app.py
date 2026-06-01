@@ -3,7 +3,6 @@ from flask_cors import CORS
 from dotenv import load_dotenv
 import os
 from supabase import create_client
-import random
 
 app = Flask(__name__)
 CORS(app)
@@ -130,10 +129,11 @@ def donate():
     supabase.table("umbrellas").insert({
         "umbrella_id": umbrella_id,
         "umbrella_code": umbrella_code,
-        "user_id": user_id,
+        "owner_id": user_id,
         "colour": colour,
         "nickname": nickname,
-        "status": "Available"
+        "status": "Available",
+        "borrowed_by": None 
     }).execute()
 
     return {
@@ -141,7 +141,52 @@ def donate():
         "umbrella": {
             "umbrella_id": umbrella_id,
             "umbrella_code": umbrella_code,
-            "status": "Available"
+            "status": "Available",
+            "borrowed_by": None
+        }
+    }
+
+@app.route('/borrow', methods=["POST"])
+def borrow():
+
+    data = request.get_json()
+
+    user_id = data["user_id"]
+    umbrella_id = data["umbrella_id"]
+ 
+    result = (
+        supabase.table("umbrellas")
+        .select("*")
+        .eq("umbrella_id", umbrella_id)
+        .execute()
+    )
+
+    if not result.data:
+        return {
+            "message": "Umbrella not found"
+        }, 404
+    
+    umbrella = result.data[0]
+
+    if umbrella["status"] == "Borrowed":
+        return {
+            "message": "Umbrella already borrowed"
+        }, 400
+
+    supabase.table("umbrellas").update({
+        "status": "Borrowed",
+        "borrowed_by": user_id
+    }).eq(
+        "umbrella_id",
+        umbrella_id
+    ).execute()
+
+    return {
+        "message": "Umbrella borrowed successfully",
+        "umbrella": {
+            "umbrella_id": umbrella_id,
+            "status": "Borrowed",
+            "borrowed_by": user_id
         }
     }
 
