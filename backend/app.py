@@ -190,5 +190,68 @@ def borrow():
         }
     }
 
+@app.route("/return", methods=["POST"])
+def return_umbrella():
+
+    data = request.get_json()
+
+    umbrella_id = data["umbrella_id"]
+    user_id = data["user_id"]
+
+
+    result = (
+        supabase.table("umbrellas")
+        .select("*")
+        .eq("umbrella_id", umbrella_id)
+        .execute()
+    )
+
+    if not result.data:
+        return {
+            "message": "Umbrella not found"
+        }, 404
+    
+    umbrella = result.data[0]
+
+    if umbrella["status"] == "Available":
+        return {
+            "message": "Umbrella already available, cannot be returned"
+        }, 400
+    
+    if umbrella["borrowed_by"] != user_id:
+        return {
+            "message": "You did not borrow this umbrella"
+        }, 403
+    
+    supabase.table("umbrellas").update({
+        "status": "Available",
+        "borrowed_by": None
+    }).eq(
+        "umbrella_id",
+        umbrella_id
+    ).execute()
+
+    return {
+        "message": "Umbrella returned successfully",
+        "umbrella": {
+            "umbrella_id": umbrella_id,
+            "status": "Available",
+            "borrowed_by": None
+        }
+    } 
+
+@app.route("/umbrellas")
+def get_umbrellas():
+
+    result = (
+        supabase.table("umbrellas")
+        .select("*")
+        .eq("status", "Available")
+        .execute()
+    )
+
+    return result.data
+
+
 if __name__ == "__main__":
     app.run(debug=True)
