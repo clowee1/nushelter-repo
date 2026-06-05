@@ -3,10 +3,22 @@ from flask_cors import CORS
 from dotenv import load_dotenv
 import os
 from supabase import create_client
+from werkzeug.security import generate_password_hash
+from werkzeug.security import check_password_hash
+from flask_jwt_extended import (
+    JWTManager,
+    create_access_token,
+    jwt_required,
+    get_jwt_identity
+)
+load_dotenv()
 
 app = Flask(__name__)
+app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")
+
+jwt = JWTManager(app)
+
 CORS(app)
-load_dotenv()
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
@@ -31,15 +43,27 @@ def home():
 @app.route("/register", methods=["POST"])
 def register():
 
-    print("Register route called")
-
     data = request.get_json()
-    print(data)
 
     name = data["name"]
     email = data["email"]
     password = data["password"]
 
+    if len(password) < 8:
+        return {
+            "message": "Password must be at least 8 characters"
+        }, 400
+    
+    if not email.endswith("@u.nus.edu"):
+        return {
+            "message": "Only NUS students may register"
+        }, 400
+    
+    if len(name) == 0:
+        return {
+            "message": "Please enter your name"
+        }, 400
+    
     existing_user = (
         supabase.table("users")
         .select("*")
@@ -52,10 +76,12 @@ def register():
             "message": "Email already exists"
         }, 400
     
+    hashed_password = generate_password_hash(password)
+
     result = supabase.table("users").insert({
         "name": name,
         "email": email,
-        "password": password
+        "password_hashed": hashed_password
     }).execute()
 
     user = result.data[0]
@@ -63,7 +89,7 @@ def register():
     return {
         "message": "User registered successfully",
         "user": {
-            "id": user["id"],
+            "user_id": user["user_id"],
             "name": user["name"],
             "email": user["email"]
         }
@@ -78,7 +104,7 @@ def login():
     password = data["password"]
 
     result = (supabase.table("users")
-                     .select("*")
+                     .select("user_id, name, email, password_hashed")
                      .eq("email", email)
                      .execute()
     )
@@ -90,25 +116,35 @@ def login():
     
     user = result.data[0]
 
-    if user["password"] != password:
+    if not check_password_hash(
+        user["password_hashed"],
+        password
+    ):
         return {
             "message": "Incorrect password"
         }, 401
+    
+    access_token = create_access_token(
+        identity = user["user_id"]
+    )
+
     return {
         "message": "Login successful",
+        "token": access_token,
         "user": {
-            "id": user["id"],
+            "user_id": user["user_id"],
             "name": user["name"],
             "email": user["email"]
         }
     }
 
 @app.route('/donate', methods=["POST"])
+@jwt_required()
 def donate():
 
     data = request.get_json()
 
-    user_id = data["user_id"]
+    user_id = get_jwt_identity()
     colour = data["colour"]
     nickname = data["nickname"]
 
@@ -119,39 +155,49 @@ def donate():
                     .execute()
     )
 
-    if not last_umbrella.data:
-        umbrella_id = 1
-    else:
-        umbrella_id = last_umbrella.data[0]["umbrella_id"] + 1
-    
-    umbrella_code = f"NUS-{umbrella_id:03d}"
-
-    supabase.table("umbrellas").insert({
-        "umbrella_id": umbrella_id,
-        "umbrella_code": umbrella_code,
+    result = supabase.table("umbrellas").insert({
         "owner_id": user_id,
         "colour": colour,
         "nickname": nickname,
         "status": "Available",
-        "borrowed_by": None 
+        "borrowed_by": None
     }).execute()
 
+    umbrella = result.data[0]
+
+    umbrella_id = umbrella["umbrella_id"]
+    umbrella_code = f"NUS-{umbrella_id:03d}"
+
+    supabase.table("umbrellas").update({
+        "umbrella_code": umbrella_code
+    }).eq(
+        "umbrella_id", umbrella_id
+    ).execute()
+    
     return {
         "message": "Umbrella registered successfully",
         "umbrella": {
             "umbrella_id": umbrella_id,
             "umbrella_code": umbrella_code,
-            "status": "Available",
-            "borrowed_by": None
         }
     }
 
+@app.route('/location', methods=["POST"])
+@jwt_required
+def place_umbrella():
+
+    data = request.get_json()
+
+    umbrella_id = data["umbrella_id"]
+
+
 @app.route('/borrow', methods=["POST"])
+@jwt_required()
 def borrow():
 
     data = request.get_json()
 
-    user_id = data["user_id"]
+    user_id = get_jwt_identity()
     umbrella_id = data["umbrella_id"]
  
     result = (
@@ -191,12 +237,13 @@ def borrow():
     }
 
 @app.route("/return", methods=["POST"])
+@jwt_required()
 def return_umbrella():
 
     data = request.get_json()
 
     umbrella_id = data["umbrella_id"]
-    user_id = data["user_id"]
+    user_id = get_jwt_identity()
 
 
     result = (
