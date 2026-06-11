@@ -8,6 +8,9 @@ import DonateConditionPage from './pages/DonateConditionPage'
 import DonateLocationPage from './pages/DonateLocationPage'
 import DonateReviewPage from './pages/DonateReviewPage'
 import DonateConfirmedPage from './pages/DonateConfirmedPage'
+import BorrowPage from './pages/BorrowPage'
+import BorrowConfirmPage from './pages/BorrowConfirmPage'
+import BorrowSuccessPage from './pages/BorrowSuccessPage'
 
 function App() {
   return (
@@ -22,6 +25,9 @@ function App() {
         <Route path="/donate/location" element={<DonateLocationPage />} />
         <Route path="/donate/review" element={<DonateReviewPage />} />
         <Route path="/donate/confirmed" element={<DonateConfirmedPage />} />
+        <Route path="/borrow" element={<BorrowPage />} />
+        <Route path="/borrow/confirm" element={<BorrowConfirmPage />} />
+        <Route path="/borrow/success" element={<BorrowSuccessPage />} />
       </Routes>
     </BrowserRouter>
   )
