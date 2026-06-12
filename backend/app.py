@@ -3,6 +3,7 @@ from flask_cors import CORS
 from dotenv import load_dotenv
 import os
 from supabase import create_client
+from datetime import datetime, timedelta, timezone
 from werkzeug.security import generate_password_hash
 from werkzeug.security import check_password_hash
 from flask_jwt_extended import (
@@ -11,6 +12,7 @@ from flask_jwt_extended import (
     jwt_required,
     get_jwt_identity
 )
+
 load_dotenv()
 
 app = Flask(__name__)
@@ -82,7 +84,7 @@ def register():
         "name": name,
         "email": email,
         "password_hashed": hashed_password,
-        "is_suspended": FALSE
+        "is_suspended": False
     }).execute()
 
     user = result.data[0]
@@ -184,7 +186,7 @@ def donate():
     }
 
 @app.route('/location', methods=["POST"])
-@jwt_required
+@jwt_required()
 def place_umbrella():
 
     data = request.get_json()
@@ -200,18 +202,18 @@ def borrow():
 
     user_id = get_jwt_identity()
     umbrella_id = data["umbrella_id"]
+    
+    if has_overdue_umbrella(user_id):
 
-    suspended_accounts = (
-        supabase.table("users")
-        .select("is_suspended")
-        .eq("user_id", user_id)
-        .execute()
-    )
+        supabase.table("users").update({
+            "is_suspended": True
+        }).eq(
+            "user_id",
+            user_id
+        ).execute()
 
-    user = suspended_accounts.data[0]
-    if user["is_suspended"]:
         return {
-            "message": "Account suspended. Please return overdue umbrellas to continue borrowing."
+            "message": "Account suspended due to overdue umbrella."
         }, 403
  
     result = (
@@ -241,6 +243,18 @@ def borrow():
         umbrella_id
     ).execute()
 
+    due_at = (
+        datetime.now(timezone.utc)
+        + timedelta(hours=48)
+    ).isoformat()
+
+    supabase.table("borrow_logs").insert({
+        "umbrella_id": umbrella_id,
+        "borrower_id": user_id,
+        "due_at": due_at,
+        "status": "Active"
+    }).execute()
+
     return {
         "message": "Umbrella borrowed successfully",
         "umbrella": {
@@ -259,6 +273,21 @@ def return_umbrella():
     umbrella_id = data["umbrella_id"]
     user_id = get_jwt_identity()
 
+    active_log = (
+        supabase.table("borrow_logs")
+        .select("*")
+        .eq("umbrella_id", umbrella_id)
+        .eq("borrower_id", user_id)
+        .eq("status", "Active")
+        .execute()
+    )
+
+    if active_log.data:
+        log = active_log.data[0]
+    else:
+        return {
+            "message": "Active borrow log not found"
+        }, 404
 
     result = (
         supabase.table("umbrellas")
@@ -292,6 +321,21 @@ def return_umbrella():
         umbrella_id
     ).execute()
 
+    supabase.table("borrow_logs").update({
+        "returned_at": datetime.now(timezone.utc).isoformat(),
+        "status": "Returned"
+    }).eq(
+        "borrow_id",
+        log["borrow_id"]
+    ).execute()
+
+    supabase.table("users").update({
+        "is_suspended": False
+    }).eq(
+        "user_id",
+        user_id
+    ).execute()
+
     return {
         "message": "Umbrella returned successfully",
         "umbrella": {
@@ -313,6 +357,46 @@ def get_umbrellas():
 
     return result.data
 
+
+def has_overdue_umbrella(user_id):
+
+    active_logs = (
+        supabase.table("borrow_logs")
+        .select("*")
+        .eq("borrower_id", user_id)
+        .eq("status", "Active")
+        .execute()
+    )
+
+    now = datetime.now(timezone.utc)
+
+    for log in active_logs.data:
+
+        due_at = datetime.fromisoformat(
+            log["due_at"].replace("Z", "+00:00")
+        )
+
+        if now > due_at:
+            return True
+
+    return False
+
+
+@app.route("/my_borrows")
+@jwt_required()
+def my_borrows():
+
+    user_id = get_jwt_identity()
+
+    result = (
+        supabase.table("borrow_logs")
+        .select("*")
+        .eq("borrower_id", user_id)
+        .order("borrowed_at", desc=True)
+        .execute()
+    )
+
+    return result.data
 
 if __name__ == "__main__":
     app.run(debug=True)
