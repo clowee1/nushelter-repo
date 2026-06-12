@@ -81,7 +81,8 @@ def register():
     result = supabase.table("users").insert({
         "name": name,
         "email": email,
-        "password_hashed": hashed_password
+        "password_hashed": hashed_password,
+        "is_suspended": FALSE
     }).execute()
 
     user = result.data[0]
@@ -199,6 +200,19 @@ def borrow():
 
     user_id = get_jwt_identity()
     umbrella_id = data["umbrella_id"]
+
+    suspended_accounts = (
+        supabase.table("users")
+        .select("is_suspended")
+        .eq("user_id", user_id)
+        .execute()
+    )
+
+    user = suspended_accounts.data[0]
+    if user["is_suspended"]:
+        return {
+            "message": "Account suspended. Please return overdue umbrellas to continue borrowing."
+        }, 403
  
     result = (
         supabase.table("umbrellas")
