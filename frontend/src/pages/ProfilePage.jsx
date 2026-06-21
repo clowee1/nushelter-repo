@@ -94,18 +94,21 @@ function ProfilePage() {
 
         {/* Donated Umbrellas */}
         <div style={{ backgroundColor: 'white', borderRadius: '12px', padding: '20px' }}>
-          <h3 style={{ margin: '0 0 16px', fontSize: '15px', color: '#333' }}>My Donated Umbrellas</h3>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <h3 style={{ margin: '0 0 16px', fontSize: '15px', color: '#333' }}>My Donated Umbrellas</h3>
+        {[{ code: 'NUS-042', name: 'Blue Polka Dot', studentsHelped: 47, daysActive: 89, locations: 6, donatedDate: '3 Jan 2026', donatedLocation: 'CLB Level 1' }].map(umbrella => (
+            <div key={umbrella.code} onClick={() => navigate('/umbrella', { state: { umbrella } })}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div style={{ width: '40px', height: '40px', backgroundColor: '#1a3a33', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>☂️</div>
-              <div>
-                <p style={{ margin: 0, fontWeight: '600', fontSize: '14px' }}>NUS-042 · Blue Polka Dot</p>
-                <p style={{ margin: 0, fontSize: '12px', color: '#888' }}>47 students helped · 6 locations</p>
-              </div>
+                <div style={{ width: '40px', height: '40px', backgroundColor: '#1a3a33', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>☂️</div>
+                <div>
+                <p style={{ margin: 0, fontWeight: '600', fontSize: '14px' }}>{umbrella.code} · {umbrella.name}</p>
+                <p style={{ margin: 0, fontSize: '12px', color: '#888' }}>{umbrella.studentsHelped} students helped · {umbrella.locations} locations</p>
+                </div>
             </div>
             <span style={{ color: '#ccc' }}>›</span>
-          </div>
-          <p onClick={() => navigate('/donate')} style={{ textAlign: 'center', fontSize: '13px', color: '#1a3a33', marginTop: '16px', cursor: 'pointer' }}>+ Donate another umbrella</p>
+            </div>
+        ))}
+        <p onClick={() => navigate('/donate')} style={{ textAlign: 'center', fontSize: '13px', color: '#1a3a33', marginTop: '16px', cursor: 'pointer' }}>+ Donate another umbrella</p>
         </div>
 
         {/* Stats */}

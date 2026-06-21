@@ -11,6 +11,10 @@ import DonateConfirmedPage from './pages/DonateConfirmedPage'
 import BorrowPage from './pages/BorrowPage'
 import BorrowConfirmPage from './pages/BorrowConfirmPage'
 import BorrowSuccessPage from './pages/BorrowSuccessPage'
+import ReturnLocationPage from './pages/ReturnLocationPage'
+import ReturnNotePage from './pages/ReturnNotePage'
+import ReturnSuccessPage from './pages/ReturnSuccessPage'
+import UmbrellaDetailPage from './pages/UmbrellaDetailPage'
 
 function App() {
   return (
@@ -28,6 +32,10 @@ function App() {
         <Route path="/borrow" element={<BorrowPage />} />
         <Route path="/borrow/confirm" element={<BorrowConfirmPage />} />
         <Route path="/borrow/success" element={<BorrowSuccessPage />} />
+        <Route path="/return" element={<ReturnLocationPage />} />
+        <Route path="/return/note" element={<ReturnNotePage />} />
+        <Route path="/return/success" element={<ReturnSuccessPage />} />
+        <Route path="/umbrella" element={<UmbrellaDetailPage />} />
       </Routes>
     </BrowserRouter>
   )
