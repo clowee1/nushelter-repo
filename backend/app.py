@@ -151,13 +151,6 @@ def donate():
     colour = data["colour"]
     nickname = data["nickname"]
 
-    last_umbrella = (supabase.table("umbrellas")
-                    .select("umbrella_id")
-                    .order("umbrella_id", desc = True)
-                    .limit(1)
-                    .execute()
-    )
-
     result = supabase.table("umbrellas").insert({
         "owner_id": user_id,
         "colour": colour,
@@ -184,15 +177,6 @@ def donate():
             "umbrella_code": umbrella_code,
         }
     }
-
-@app.route('/location', methods=["POST"])
-@jwt_required()
-def place_umbrella():
-
-    data = request.get_json()
-
-    umbrella_id = data["umbrella_id"]
-
 
 @app.route('/borrow', methods=["POST"])
 @jwt_required()
@@ -397,6 +381,41 @@ def my_borrows():
     )
 
     return result.data
+
+@app.route("/profile")
+@jwt_required()
+def profile():
+    
+    user_id = get_jwt_identity()
+
+    user = (
+        supabase.table("users")
+        .select("user_id, name, email")
+        .eq("user_id", user_id)
+        .execute()
+    )
+
+    donated = (
+        supabase.table("umbrellas")
+        .select("*")
+        .eq("owner_id", user_id)
+        .execute()
+    )
+
+    borrowed = (
+        supabase.table("borrow_logs")
+        .select("*")
+        .eq("borrower_id", user_id)
+        .execute()
+    )
+
+    return {
+        "user": user,
+        "stats": {
+            "donated": len(donated.data),
+            "borrowed": len(borrowed.data)
+        }
+    }
 
 if __name__ == "__main__":
     app.run(debug=True)
