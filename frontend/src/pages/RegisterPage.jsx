@@ -17,12 +17,12 @@ function RegisterPage() {
       const data = await res.json()
       if (res.ok) {
         localStorage.setItem('user', JSON.stringify(data.user))
-        navigate('/profile')
+        navigate('/login')
       } else {
         alert(data.message)
       }
     } catch (error) {
-      navigate('/profile') // fallback if backend down
+      alert("Unable to connect to server") // fallback if backend down
     }
   }
 
@@ -69,7 +69,7 @@ function RegisterPage() {
               fontSize: '15px', boxSizing: 'border-box', outline: 'none'
             }}
           />
-          <p style={{ fontSize: '12px', color: '#888', marginTop: '6px' }}>Use your NUS or personal email address.</p>
+          <p style={{ fontSize: '12px', color: '#888', marginTop: '6px' }}>Use your NUS email address.</p>
         </div>
 
         <div>
@@ -77,7 +77,7 @@ function RegisterPage() {
           <div style={{ position: 'relative' }}>
             <input
               type={showPassword ? 'text' : 'password'}
-              placeholder="Min. 6 characters"
+              placeholder="Min. 8 characters"
               value={password}
               onChange={e => setPassword(e.target.value)}
               style={{
