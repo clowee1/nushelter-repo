@@ -141,6 +141,11 @@ def login():
         }
     }
 
+@app.route("/stations")
+def get_stations():
+    result = supabase.table("stations").select("*").execute()
+    return result.data
+
 @app.route('/donate', methods=["POST"])
 @jwt_required()
 def donate():
@@ -150,13 +155,25 @@ def donate():
     user_id = get_jwt_identity()
     colour = data["colour"]
     nickname = data["nickname"]
+    condition = data["condition"]
+    location_id = data["location_id"]
+
+    station = (supabase.table("stations")
+               .select("current_count, capacity")
+                .eq("station_id", location_id)
+                .execute().data[0])
+
+    if station["current_count"] >= station["capacity"]:
+        return {"error": "Station is full"}, 400
 
     result = supabase.table("umbrellas").insert({
         "owner_id": user_id,
         "colour": colour,
         "nickname": nickname,
         "status": "Available",
-        "borrowed_by": None
+        "borrowed_by": None,
+        "condition": condition,
+        "location_id" : location_id
     }).execute()
 
     umbrella = result.data[0]
@@ -169,6 +186,16 @@ def donate():
     }).eq(
         "umbrella_id", umbrella_id
     ).execute()
+
+    station = (supabase.table("stations")
+               .select("current_count")
+               .eq("station_id", location_id)
+               .execute().data[0])
+    
+    supabase.table("stations").update({
+        "current_count": station["current_count"] + 1
+    }).eq("station_id", location_id).execute()
+
     
     return {
         "message": "Umbrella registered successfully",
@@ -221,7 +248,8 @@ def borrow():
 
     supabase.table("umbrellas").update({
         "status": "Borrowed",
-        "borrowed_by": user_id
+        "borrowed_by": user_id,
+        "location_id": None
     }).eq(
         "umbrella_id",
         umbrella_id
@@ -239,6 +267,16 @@ def borrow():
         "status": "Active"
     }).execute()
 
+    if umbrella["location_id"]:
+        station = (supabase.table("stations")
+                   .select("current_count")
+                   .eq("station_id", umbrella["location_id"])
+                   .execute().data[0])
+
+        supabase.table("stations").update({
+            "current_count": max(0, station["current_count"] - 1)
+        }).eq("station_id", umbrella["location_id"]).execute()
+
     return {
         "message": "Umbrella borrowed successfully",
         "umbrella": {
@@ -253,7 +291,7 @@ def borrow():
 def return_umbrella():
 
     data = request.get_json()
-
+    location_id = data["location_id"]
     umbrella_id = data["umbrella_id"]
     user_id = get_jwt_identity()
 
@@ -297,9 +335,18 @@ def return_umbrella():
             "message": "You did not borrow this umbrella"
         }, 403
     
+    station = (supabase.table("stations")
+               .select("current_count, capacity")
+               .eq("station_id", location_id)
+               .execute().data[0])
+
+    if station["current_count"] >= station["capacity"]:
+        return {"error": "Station is full, please choose another"}, 400
+    
     supabase.table("umbrellas").update({
         "status": "Available",
-        "borrowed_by": None
+        "borrowed_by": None,
+        "location_id": location_id
     }).eq(
         "umbrella_id",
         umbrella_id
@@ -319,6 +366,10 @@ def return_umbrella():
         "user_id",
         user_id
     ).execute()
+
+    supabase.table("stations").update({
+        "current_count": station["current_count"] + 1
+    }).eq("station_id", location_id).execute()
 
     return {
         "message": "Umbrella returned successfully",
