@@ -1,18 +1,61 @@
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 
 function ProfilePage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const user = JSON.parse(localStorage.getItem('user') || '{}')
   const [activeBorrow, setActiveBorrow] = useState(null)
   const [timeLeft, setTimeLeft] = useState('')
   const [timerColor, setTimerColor] = useState('#1a3a33')
   const [timerPercent, setTimerPercent] = useState(100)
+  const [profileData, setProfileData] = useState(null)
+  const [donatedUmbrellas, setDonatedUmbrellas] = useState([])
 
   useEffect(() => {
-    const borrow = JSON.parse(localStorage.getItem('activeBorrow') || 'null')
-    if (borrow) setActiveBorrow(borrow)
-  }, [])
+    const token = localStorage.getItem('token')
+    const headers = { 'Authorization': `Bearer ${token}` }
+
+    const fetchAll = async () => {
+
+      try {
+        const res = await fetch('http://127.0.0.1:5000/profile', { headers })
+        const data = await res.json()
+        setProfileData(data)
+      } catch (e) {}
+
+      try {
+        const res = await fetch('http://127.0.0.1:5000/umbrellas')
+        const data = await res.json()
+        const mine = data.filter(u => u.owner_id === user.user_id)
+        setDonatedUmbrellas(mine)
+      } catch (e) {}
+
+      try {
+        const res = await fetch('http://127.0.0.1:5000/my_borrows', { headers })
+        const data = await res.json()
+        const active = data.find(b => b.status === 'Active')
+        if (active) {
+          const stored = JSON.parse(localStorage.getItem('activeBorrow') || 'null')
+          setActiveBorrow({
+            code: stored?.code || `NUS-${active.umbrella_id}`,
+            name: stored?.name || 'Umbrella',
+            umbrella_id: active.umbrella_id,
+            borrowedAt: active.borrowed_at,
+            location: stored?.location || ''
+          })
+        } else {
+          setActiveBorrow(null)
+          localStorage.removeItem('activeBorrow')
+        }
+      } catch (e) {
+        const borrow = JSON.parse(localStorage.getItem('activeBorrow') || 'null')
+        if (borrow) setActiveBorrow(borrow)
+      }
+    }
+
+    fetchAll()
+  }, [location])
 
   useEffect(() => {
     if (!activeBorrow) return
@@ -24,18 +67,15 @@ function ProfilePage() {
       const totalMs = 48 * 60 * 60 * 1000
       const percent = Math.max(0, (diff / totalMs) * 100)
       setTimerPercent(percent)
-
       if (diff <= 0) {
         setTimeLeft('Overdue!')
         setTimerColor('red')
         clearInterval(interval)
         return
       }
-
       const hours = Math.floor(diff / (1000 * 60 * 60))
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
       setTimeLeft(`${hours}h ${minutes}m remaining`)
-
       if (percent > 50) setTimerColor('#1a3a33')
       else if (percent > 25) setTimerColor('#d97706')
       else setTimerColor('red')
@@ -45,6 +85,7 @@ function ProfilePage() {
 
   const handleSignOut = () => {
     localStorage.removeItem('user')
+    localStorage.removeItem('token')
     localStorage.removeItem('activeBorrow')
     navigate('/')
   }
@@ -61,7 +102,6 @@ function ProfilePage() {
 
       <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '400px', margin: '0 auto', paddingBottom: '100px' }}>
 
-        {/* Active borrow timer */}
         {activeBorrow && (
           <div style={{ backgroundColor: 'white', borderRadius: '12px', padding: '20px', border: `1.5px solid ${timerColor}` }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
@@ -92,30 +132,45 @@ function ProfilePage() {
           </div>
         )}
 
-        {/* Donated Umbrellas */}
         <div style={{ backgroundColor: 'white', borderRadius: '12px', padding: '20px' }}>
-        <h3 style={{ margin: '0 0 16px', fontSize: '15px', color: '#333' }}>My Donated Umbrellas</h3>
-        {[{ code: 'NUS-042', name: 'Blue Polka Dot', studentsHelped: 47, daysActive: 89, locations: 6, donatedDate: '3 Jan 2026', donatedLocation: 'CLB Level 1' }].map(umbrella => (
-            <div key={umbrella.code} onClick={() => navigate('/umbrella', { state: { umbrella } })}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ width: '40px', height: '40px', backgroundColor: '#1a3a33', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>☂️</div>
+          <h3 style={{ margin: '0 0 16px', fontSize: '15px', color: '#333' }}>My Donated Umbrellas</h3>
+          {donatedUmbrellas.length === 0 && (
+            <p style={{ fontSize: '13px', color: '#aaa', textAlign: 'center', margin: '0 0 12px' }}>No donated umbrellas yet.</p>
+          )}
+          {donatedUmbrellas.map(umbrella => (
+            <div key={umbrella.umbrella_id}
+              onClick={() => navigate('/umbrella', { state: { umbrella: {
+                code: umbrella.umbrella_code,
+                name: umbrella.nickname,
+                colour: umbrella.colour,
+                studentsHelped: 0,
+                daysActive: 0,
+                locations: 0,
+                donatedDate: '',
+                donatedLocation: ''
+              }}})}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', marginBottom: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ width: '40px', height: '40px', backgroundColor: umbrella.colour || '#1a3a33', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>☂️</div>
                 <div>
-                <p style={{ margin: 0, fontWeight: '600', fontSize: '14px' }}>{umbrella.code} · {umbrella.name}</p>
-                <p style={{ margin: 0, fontSize: '12px', color: '#888' }}>{umbrella.studentsHelped} students helped · {umbrella.locations} locations</p>
+                  <p style={{ margin: 0, fontWeight: '600', fontSize: '14px' }}>{umbrella.umbrella_code} · {umbrella.nickname}</p>
+                  <p style={{ margin: 0, fontSize: '12px', color: umbrella.status === 'Available' ? 'green' : '#d97706' }}>{umbrella.status}</p>
                 </div>
+              </div>
+              <span style={{ color: '#ccc' }}>›</span>
             </div>
-            <span style={{ color: '#ccc' }}>›</span>
-            </div>
-        ))}
-        <p onClick={() => navigate('/donate')} style={{ textAlign: 'center', fontSize: '13px', color: '#1a3a33', marginTop: '16px', cursor: 'pointer' }}>+ Donate another umbrella</p>
+          ))}
+          <p onClick={() => navigate('/donate')} style={{ textAlign: 'center', fontSize: '13px', color: '#1a3a33', marginTop: '8px', cursor: 'pointer' }}>+ Donate another umbrella</p>
         </div>
 
-        {/* Stats */}
         <div style={{ backgroundColor: 'white', borderRadius: '12px', padding: '20px' }}>
           <h3 style={{ margin: '0 0 16px', fontSize: '15px', color: '#333' }}>My Stats</h3>
           <div style={{ display: 'flex', gap: '12px' }}>
-            {[{ value: '12', label: 'Borrowed' }, { value: '1', label: 'Donated' }, { value: '100%', label: 'On time' }].map(stat => (
+            {[
+              { value: profileData?.stats?.borrowed ?? '0', label: 'Borrowed' },
+              { value: profileData?.stats?.donated ?? '0', label: 'Donated' },
+              { value: '100%', label: 'On time' }
+            ].map(stat => (
               <div key={stat.label} style={{ flex: 1, backgroundColor: '#f8f8f8', borderRadius: '8px', padding: '16px', textAlign: 'center' }}>
                 <p style={{ margin: '0 0 4px', fontSize: '20px', fontWeight: '700', color: '#1a3a33' }}>{stat.value}</p>
                 <p style={{ margin: 0, fontSize: '12px', color: '#888' }}>{stat.label}</p>
@@ -124,7 +179,6 @@ function ProfilePage() {
           </div>
         </div>
 
-        {/* Settings */}
         <div style={{ backgroundColor: 'white', borderRadius: '12px', overflow: 'hidden' }}>
           {[{ icon: '🔔', label: 'Notifications' }, { icon: '🛡️', label: 'Privacy' }, { icon: '❓', label: 'Help & FAQ' }].map((item, i) => (
             <div key={item.label} style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', borderBottom: i < 2 ? '1px solid #f0f0f0' : 'none' }}>

@@ -7,6 +7,7 @@ function LoginPage() {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const handleLogin = async () => {
+    console.log('login clicked')
     try {
       const res = await fetch('http://127.0.0.1:5000/login', {
         method: 'POST',
@@ -14,14 +15,18 @@ function LoginPage() {
         body: JSON.stringify({ email, password })
       })
       const data = await res.json()
+      console.log('response:', data)
       if (res.ok) {
+        localStorage.setItem('token', data.token)
         localStorage.setItem('user', JSON.stringify(data.user))
-        navigate('/profile')
+        console.log('token saved:', localStorage.getItem('token'))
+        setTimeout(() => navigate('/profile'), 100)
+
       } else {
-        alert(data.message) // shows "Incorrect password" or "User not found"
+        alert(data.message)
       }
     } catch (error) {
-      navigate('/profile') // fallback if backend down
+      alert('Could not connect to server.')
     }
   }
 
