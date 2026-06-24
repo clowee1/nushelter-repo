@@ -128,7 +128,7 @@ def login():
         }, 401
     
     access_token = create_access_token(
-        identity = user["user_id"]
+        identity = str(user["user_id"])
     )
 
     return {
