@@ -29,13 +29,6 @@ supabase = create_client(
     SUPABASE_KEY
 )
 
-@app.route("/test-db")
-def test_db():
-
-    result = supabase.table("users").select("*").execute()
-
-    return result.data
-
 @app.route("/")
 def home():
     return {
@@ -54,6 +47,11 @@ def register():
     if len(password) < 8:
         return {
             "message": "Password must be at least 8 characters"
+        }, 400
+    
+    if len(email) == 0:
+        return {
+            "message": "Please enter your email"
         }, 400
     
     if not email.endswith("@u.nus.edu"):
