@@ -1,9 +1,41 @@
+import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import BottomNav from '../components/BottomNav'
 
 function DonateReviewPage() {
   const navigate = useNavigate()
   const { state } = useLocation()
+  const [loading, setLoading] = useState(false)
+
+  const handleDonate = async () => {
+    setLoading(true)
+    try {
+      const res = await fetch('http://127.0.0.1:5000/donate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          colour: state?.hex,
+          nickname: state?.nickname || state?.colorName,
+          condition: state?.condition,
+          location_id: state?.location_id
+        })
+      })
+      const data = await res.json()
+      if (res.ok) {
+        navigate('/donate/confirmed', {
+          state: { ...state, umbrellaCode: data.umbrella.umbrella_code }
+        })
+      } else {
+        alert(data.message || data.error)
+      }
+    } catch (e) {
+      alert('Could not connect to server.')
+    }
+    setLoading(false)
+  }
 
   return (
     <div style={{ fontFamily: 'sans-serif', minHeight: '100vh', backgroundColor: '#f0f0f0', paddingBottom: '80px' }}>
@@ -45,7 +77,12 @@ function DonateReviewPage() {
 
         <div style={{ display: 'flex', gap: '12px' }}>
           <button onClick={() => navigate(-1)} style={{ flex: 1, padding: '16px', backgroundColor: 'white', color: '#1a3a33', border: '1.5px solid #1a3a33', borderRadius: '8px', fontSize: '16px', fontWeight: '600', cursor: 'pointer' }}>Back</button>
-          <button onClick={() => navigate('/donate/confirmed', { state })} style={{ flex: 1, padding: '16px', backgroundColor: '#1a3a33', color: 'white', border: 'none', borderRadius: '8px', fontSize: '16px', fontWeight: '600', cursor: 'pointer' }}>Donate Umbrella</button>
+          <button
+            onClick={handleDonate}
+            disabled={loading}
+            style={{ flex: 1, padding: '16px', backgroundColor: '#1a3a33', color: 'white', border: 'none', borderRadius: '8px', fontSize: '16px', fontWeight: '600', cursor: 'pointer', opacity: loading ? 0.6 : 1 }}>
+            {loading ? 'Submitting...' : 'Donate Umbrella'}
+          </button>
         </div>
       </div>
 

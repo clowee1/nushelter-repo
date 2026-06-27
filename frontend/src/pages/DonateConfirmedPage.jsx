@@ -8,31 +8,6 @@ function DonateConfirmedPage() {
   const [umbrellaId] = useState('NUS-' + Math.floor(Math.random() * 900 + 100))
   const [realCode, setRealCode] = useState(null)
 
-  useEffect(() => {
-    const sendDonation = async () => {
-      try {
-        const res = await fetch('http://127.0.0.1:5000/donate', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          },
-          body: JSON.stringify({
-            colour: state?.hex || state?.colorName,
-            nickname: state?.nickname || state?.colorName,
-            condition: state?.condition,
-            location_id: state?.location_id 
-          })
-        })
-        const data = await res.json()
-        if (res.ok) {
-          setRealCode(data.umbrella.umbrella_code)
-        }
-      } catch (e) {}
-    }
-    sendDonation()
-  }, [])
-
   return (
     <div style={{ fontFamily: 'sans-serif', minHeight: '100vh', backgroundColor: '#f0f0f0', paddingBottom: '80px' }}>
       <div style={{ backgroundColor: '#1a3a33', padding: '48px 24px 24px', color: 'white' }}>
