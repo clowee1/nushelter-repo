@@ -5,8 +5,7 @@ import BottomNav from '../components/BottomNav'
 function DonateConfirmedPage() {
   const navigate = useNavigate()
   const { state } = useLocation()
-  const [umbrellaId] = useState('NUS-' + Math.floor(Math.random() * 900 + 100))
-  const [realCode, setRealCode] = useState(null)
+  const umbrellaCode = state?.umbrellaCode || 'NUS-???'
 
   return (
     <div style={{ fontFamily: 'sans-serif', minHeight: '100vh', backgroundColor: '#f0f0f0', paddingBottom: '80px' }}>
@@ -25,7 +24,7 @@ function DonateConfirmedPage() {
 
         <div style={{ backgroundColor: '#1a3a33', borderRadius: '10px', padding: '14px 24px', display: 'inline-block', marginBottom: '24px' }}>
           <p style={{ margin: 0, fontSize: '11px', letterSpacing: '1.5px', color: 'rgba(255,255,255,0.6)', fontWeight: '600' }}>UMBRELLA ID</p>
-          <p style={{ margin: 0, fontSize: '28px', fontWeight: '700', color: 'white', letterSpacing: '2px' }}>{realCode || umbrellaId}</p>
+          <p style={{ margin: 0, fontSize: '28px', fontWeight: '700', color: 'white', letterSpacing: '2px' }}>{umbrellaCode}</p>
         </div>
 
         <div style={{ backgroundColor: '#fffbf0', border: '1px solid #e8d9a0', borderRadius: '10px', padding: '16px', textAlign: 'left', marginBottom: '12px' }}>
@@ -37,7 +36,7 @@ function DonateConfirmedPage() {
             <div style={{ width: '36px', height: '36px', backgroundColor: '#1a3a33', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', flexShrink: 0 }}>☂️</div>
             <div style={{ textAlign: 'left' }}>
               <p style={{ margin: 0, fontSize: '10px', color: '#aaa', letterSpacing: '1px' }}>STICKER READS</p>
-              <p style={{ margin: 0, fontWeight: '700', fontSize: '16px', letterSpacing: '1px' }}>{realCode || umbrellaId}</p>
+              <p style={{ margin: 0, fontWeight: '700', fontSize: '16px', letterSpacing: '1px' }}>{umbrellaCode}</p>
               <p style={{ margin: 0, fontSize: '11px', color: '#aaa' }}>NUS Umbrella Sharing · scan to borrow</p>
             </div>
           </div>
