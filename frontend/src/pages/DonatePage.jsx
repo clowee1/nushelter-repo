@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
+import BottomNav from '../components/BottomNav'
 
 function hslToHex(h, s, l) {
   s /= 100; l /= 100
@@ -83,7 +84,7 @@ function DonatePage() {
     <div style={{ fontFamily: 'sans-serif', minHeight: '100vh', backgroundColor: '#f0f0f0', paddingBottom: '80px' }}>
       <div style={{ backgroundColor: '#1a3a33', padding: '48px 24px 24px', color: 'white' }}>
         <span onClick={() => navigate(-1)} style={{ cursor: 'pointer', fontSize: '14px', marginBottom: '16px', display: 'block', opacity: 0.8 }}>‹ Back</span>
-        <h1 style={{ margin: '0 0 4px', fontSize: '24px', fontWeight: '700' }}>Donate an Umbrella</h1>
+        <h1 style={{ margin: '0 0 4px', fontSize: '24px', fontWeight: '700', color: 'white' }}>Donate an Umbrella</h1>
         <p style={{ margin: 0, opacity: 0.7, fontSize: '14px' }}>Help keep NUS dry, one umbrella at a time.</p>
         <div style={{ display: 'flex', gap: '4px', marginTop: '20px' }}>
           {[1,2,3,4,5].map(n => (
@@ -158,14 +159,7 @@ function DonatePage() {
         </button>
       </div>
 
-      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: 'white', borderTop: '1px solid #eee', display: 'flex', justifyContent: 'space-around', padding: '12px 0' }}>
-        {[{icon:'🗺️',label:'Map'},{icon:'☂️',label:'Borrow'},{icon:'🎁',label:'Donate'},{icon:'👤',label:'Profile'}].map(tab => (
-          <div key={tab.label} style={{ textAlign: 'center', cursor: 'pointer' }} onClick={() => tab.label === 'Profile' && navigate('/profile')}>
-            <div style={{ fontSize: '22px' }}>{tab.icon}</div>
-            <p style={{ margin: 0, fontSize: '11px', color: tab.label === 'Donate' ? '#1a3a33' : '#888' }}>{tab.label}</p>
-          </div>
-        ))}
-      </div>
+      <BottomNav />
     </div>
   )
 }

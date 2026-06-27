@@ -1,33 +1,53 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-
-const MOCK_UMBRELLAS = {
-  'NUS-017': { code: 'NUS-017', name: 'Striped Navy', location: 'UTown Promenade', studentsHelped: 23, locationsVisited: 4, daysActive: 41 },
-  'NUS-042': { code: 'NUS-042', name: 'Blue Polka Dot', location: 'COM1 Lobby', studentsHelped: 47, locationsVisited: 6, daysActive: 82 },
-  'NUS-103': { code: 'NUS-103', name: 'Forest Green', location: 'Central Library', studentsHelped: 12, locationsVisited: 3, daysActive: 20 },
-}
+import BottomNav from '../components/BottomNav'
 
 function BorrowPage() {
   const navigate = useNavigate()
   const [code, setCode] = useState('')
   const [umbrella, setUmbrella] = useState(null)
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  const handleSearch = () => {
-    const found = MOCK_UMBRELLAS[code.toUpperCase()]
-    if (found) {
-      setUmbrella(found)
-      setError('')
-    } else {
-      setUmbrella(null)
-      setError('Umbrella not found. Check the code and try again.')
+  const handleSearch = async () => {
+    if (!code.trim()) return
+    setLoading(true)
+    setError('')
+    setUmbrella(null)
+
+    try {
+      const res = await fetch('http://127.0.0.1:5000/umbrellas')
+      const data = await res.json()
+      const found = data.find(u => u.umbrella_code === code.toUpperCase())
+
+      if (found) {
+        if (found.status !== 'Available') {
+          setError('This umbrella is currently borrowed. Try another code.')
+        } else {
+          setUmbrella({
+            code: found.umbrella_code,
+            name: found.nickname,
+            umbrella_id: found.umbrella_id,
+            colour: found.colour,
+            studentsHelped: 0,
+            locationsVisited: 0,
+            daysActive: 0
+          })
+        }
+      } else {
+        setError('Umbrella not found. Check the code and try again.')
+      }
+    } catch (e) {
+      setError('Could not connect to server. Try again.')
     }
+
+    setLoading(false)
   }
 
   return (
     <div style={{ fontFamily: 'sans-serif', minHeight: '100vh', backgroundColor: '#f0f0f0', paddingBottom: '80px' }}>
       <div style={{ backgroundColor: '#1a3a33', padding: '48px 24px 24px', color: 'white' }}>
-        <h1 style={{ margin: '0 0 4px', fontSize: '24px', fontWeight: '700' }}>Borrow an Umbrella</h1>
+        <h1 style={{ margin: '0 0 4px', fontSize: '24px', fontWeight: '700', color: 'white' }}>Borrow an Umbrella</h1>
         <p style={{ margin: 0, opacity: 0.7, fontSize: '14px' }}>Enter the code printed on the umbrella handle.</p>
       </div>
 
@@ -41,7 +61,9 @@ function BorrowPage() {
             placeholder="e.g. NUS-042"
             style={{ flex: 1, padding: '14px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '15px', outline: 'none', boxSizing: 'border-box' }}
           />
-          <button onClick={handleSearch} style={{ padding: '14px 18px', backgroundColor: '#1a3a33', color: 'white', border: 'none', borderRadius: '8px', fontSize: '18px', cursor: 'pointer' }}>→</button>
+          <button onClick={handleSearch} style={{ padding: '14px 18px', backgroundColor: '#1a3a33', color: 'white', border: 'none', borderRadius: '8px', fontSize: '18px', cursor: 'pointer' }}>
+            {loading ? '...' : '→'}
+          </button>
         </div>
 
         <p style={{ fontSize: '13px', color: '#888', marginBottom: '20px' }}>
@@ -60,7 +82,7 @@ function BorrowPage() {
         {umbrella && (
           <div style={{ backgroundColor: 'white', borderRadius: '12px', padding: '20px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-              <div style={{ width: '44px', height: '44px', backgroundColor: '#1a3a33', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px' }}>☂️</div>
+              <div style={{ width: '44px', height: '44px', backgroundColor: umbrella.colour || '#1a3a33', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px' }}>☂️</div>
               <div>
                 <p style={{ margin: 0, fontWeight: '700', fontSize: '16px' }}>{umbrella.code}</p>
                 <p style={{ margin: 0, fontSize: '13px', color: '#888' }}>{umbrella.name} · <span style={{ color: 'green', fontWeight: '600' }}>Available</span></p>
@@ -68,7 +90,11 @@ function BorrowPage() {
             </div>
 
             <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
-              {[{ value: umbrella.studentsHelped, label: 'students helped' }, { value: umbrella.locationsVisited, label: 'locations visited' }, { value: umbrella.daysActive, label: 'days active' }].map(stat => (
+              {[
+                { value: umbrella.studentsHelped, label: 'students helped' },
+                { value: umbrella.locationsVisited, label: 'locations visited' },
+                { value: umbrella.daysActive, label: 'days active' }
+              ].map(stat => (
                 <div key={stat.label} style={{ flex: 1, backgroundColor: '#f8f8f8', borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
                   <p style={{ margin: 0, fontWeight: '700', fontSize: '18px', color: '#1a3a33' }}>{stat.value}</p>
                   <p style={{ margin: 0, fontSize: '11px', color: '#888' }}>{stat.label}</p>
@@ -89,18 +115,7 @@ function BorrowPage() {
         )}
       </div>
 
-      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: 'white', borderTop: '1px solid #eee', display: 'flex', justifyContent: 'space-around', padding: '12px 0' }}>
-        {[{ icon: '🗺️', label: 'Map' }, { icon: '☂️', label: 'Borrow' }, { icon: '🎁', label: 'Donate' }, { icon: '👤', label: 'Profile' }].map(tab => (
-          <div key={tab.label} style={{ textAlign: 'center', cursor: 'pointer' }} onClick={() => {
-            if (tab.label === 'Donate') navigate('/donate')
-            if (tab.label === 'Profile') navigate('/profile')
-            if (tab.label === 'Borrow') navigate('/borrow')
-          }}>
-            <div style={{ fontSize: '22px' }}>{tab.icon}</div>
-            <p style={{ margin: 0, fontSize: '11px', color: tab.label === 'Borrow' ? '#1a3a33' : '#888' }}>{tab.label}</p>
-          </div>
-        ))}
-      </div>
+      <BottomNav />
     </div>
   )
 }

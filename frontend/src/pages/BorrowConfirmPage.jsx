@@ -1,15 +1,32 @@
 import { useNavigate, useLocation } from 'react-router-dom'
+import BottomNav from '../components/BottomNav'
 
 function BorrowConfirmPage() {
   const navigate = useNavigate()
   const { state } = useLocation()
   const umbrella = state?.umbrella
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
+    try {
+      const res = await fetch('http://127.0.0.1:5000/borrow', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ umbrella_id: umbrella.umbrella_id })
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        alert(data.message)
+        return
+      }
+    } catch (e) {}
+
     const borrowData = {
       code: umbrella.code,
       name: umbrella.name,
-      location: umbrella.location,
+      umbrella_id: umbrella.umbrella_id,
       borrowedAt: new Date().toISOString()
     }
     localStorage.setItem('activeBorrow', JSON.stringify(borrowData))
@@ -52,18 +69,7 @@ function BorrowConfirmPage() {
         </button>
       </div>
 
-      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: 'white', borderTop: '1px solid #eee', display: 'flex', justifyContent: 'space-around', padding: '12px 0' }}>
-        {[{ icon: '🗺️', label: 'Map' }, { icon: '☂️', label: 'Borrow' }, { icon: '🎁', label: 'Donate' }, { icon: '👤', label: 'Profile' }].map(tab => (
-          <div key={tab.label} style={{ textAlign: 'center', cursor: 'pointer' }} onClick={() => {
-            if (tab.label === 'Donate') navigate('/donate')
-            if (tab.label === 'Profile') navigate('/profile')
-            if (tab.label === 'Borrow') navigate('/borrow')
-          }}>
-            <div style={{ fontSize: '22px' }}>{tab.icon}</div>
-            <p style={{ margin: 0, fontSize: '11px', color: tab.label === 'Borrow' ? '#1a3a33' : '#888' }}>{tab.label}</p>
-          </div>
-        ))}
-      </div>
+      <BottomNav />
     </div>
   )
 }

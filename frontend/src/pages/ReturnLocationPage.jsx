@@ -1,12 +1,14 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import BottomNav from '../components/BottomNav'
 
 const LOCATIONS = [
-  { id: 'utown', name: 'UTown Promenade', available: 0, capacity: 4, need: 'High Need', needColor: 'red', aiPick: true },
-  { id: 'science', name: 'Science Faculty', available: 0, capacity: 3, need: 'High Need', needColor: 'red', aiPick: true },
-  { id: 'com1', name: 'COM1 Lobby', available: 2, capacity: 5, need: 'Moderate', needColor: '#d97706', aiPick: false },
-  { id: 'fass', name: 'FASS Building', available: 2, capacity: 4, need: 'Low Need', needColor: '#1a3a33', aiPick: false },
-  { id: 'library', name: 'Central Library', available: 5, capacity: 6, need: 'Low Need', needColor: '#1a3a33', aiPick: false },
+  { id: 1, name: 'COM1 Lobby', capacity: 10, available: 0, need: 'High Need', needColor: 'red', aiPick: true },
+  { id: 2, name: 'UTown Bus Stop', capacity: 10, available: 0, need: 'High Need', needColor: 'red', aiPick: true },
+  { id: 3, name: 'Central Library', capacity: 10, available: 0, need: 'Moderate', needColor: '#d97706', aiPick: false },
+  { id: 4, name: 'LT27', capacity: 10, available: 0, need: 'Low Need', needColor: '#1a3a33', aiPick: false },
+  { id: 5, name: 'Raffles Hall', capacity: 10, available: 0, need: 'Low Need', needColor: '#1a3a33', aiPick: false },
+  { id: 6, name: 'FASS Bus Stop', capacity: 10, available: 0, need: 'Low Need', needColor: '#1a3a33', aiPick: false },
 ]
 
 function ReturnLocationPage() {
@@ -66,18 +68,7 @@ function ReturnLocationPage() {
         </button>
       </div>
 
-      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: 'white', borderTop: '1px solid #eee', display: 'flex', justifyContent: 'space-around', padding: '12px 0' }}>
-        {[{ icon: '🗺️', label: 'Map' }, { icon: '☂️', label: 'Borrow' }, { icon: '🎁', label: 'Donate' }, { icon: '👤', label: 'Profile' }].map(tab => (
-          <div key={tab.label} style={{ textAlign: 'center', cursor: 'pointer' }} onClick={() => {
-            if (tab.label === 'Donate') navigate('/donate')
-            if (tab.label === 'Profile') navigate('/profile')
-            if (tab.label === 'Borrow') navigate('/borrow')
-          }}>
-            <div style={{ fontSize: '22px' }}>{tab.icon}</div>
-            <p style={{ margin: 0, fontSize: '11px', color: '#888' }}>{tab.label}</p>
-          </div>
-        ))}
-      </div>
+      <BottomNav />
     </div>
   )
 }

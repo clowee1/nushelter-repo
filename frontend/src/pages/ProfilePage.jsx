@@ -1,5 +1,7 @@
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useEffect, useState } from 'react'
+import BottomNav from '../components/BottomNav'
+import { Bell, Shield, HelpCircle, LogOut } from 'lucide-react'
 
 function ProfilePage() {
   const navigate = useNavigate()
@@ -94,8 +96,8 @@ function ProfilePage() {
     <div style={{ fontFamily: 'sans-serif', minHeight: '100vh', backgroundColor: '#f0f0f0' }}>
       <div style={{ backgroundColor: '#1a3a33', padding: '48px 24px 24px', color: 'white', display: 'flex', alignItems: 'center', gap: '16px' }}>
         <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>👤</div>
-        <div>
-          <h2 style={{ margin: 0, fontSize: '18px' }}>{user.name || 'Guest'}</h2>
+        <div style={{ textAlign: 'left' }}>
+          <h2 style={{ margin: 0, fontSize: '18px', color: 'white'}}>{user.name || 'Guest'}</h2>
           <p style={{ margin: 0, fontSize: '13px', opacity: 0.7 }}>{user.email || ''}</p>
         </div>
       </div>
@@ -180,7 +182,7 @@ function ProfilePage() {
         </div>
 
         <div style={{ backgroundColor: 'white', borderRadius: '12px', overflow: 'hidden' }}>
-          {[{ icon: '🔔', label: 'Notifications' }, { icon: '🛡️', label: 'Privacy' }, { icon: '❓', label: 'Help & FAQ' }].map((item, i) => (
+          {[{ icon: <Bell size={18} color="#555" />, label: 'Notifications' }, { icon: <Shield size={18} color="#555" />, label: 'Privacy' }, { icon: <HelpCircle size={18} color="#555" />, label: 'Help & FAQ' }].map((item, i) => (
             <div key={item.label} style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', borderBottom: i < 2 ? '1px solid #f0f0f0' : 'none' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <span>{item.icon}</span>
@@ -190,24 +192,13 @@ function ProfilePage() {
             </div>
           ))}
           <div onClick={handleSignOut} style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', borderTop: '1px solid #f0f0f0' }}>
-            <span>🚪</span>
+            <LogOut size={18} color="red" />
             <span style={{ fontSize: '15px', color: 'red' }}>Sign Out</span>
           </div>
         </div>
       </div>
 
-      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: 'white', borderTop: '1px solid #eee', display: 'flex', justifyContent: 'space-around', padding: '12px 0' }}>
-        {[{ icon: '🗺️', label: 'Map' }, { icon: '☂️', label: 'Borrow' }, { icon: '🎁', label: 'Donate' }, { icon: '👤', label: 'Profile' }].map(tab => (
-          <div key={tab.label} style={{ textAlign: 'center', cursor: 'pointer' }} onClick={() => {
-            if (tab.label === 'Donate') navigate('/donate')
-            if (tab.label === 'Profile') navigate('/profile')
-            if (tab.label === 'Borrow') navigate('/borrow')
-          }}>
-            <div style={{ fontSize: '22px' }}>{tab.icon}</div>
-            <p style={{ margin: 0, fontSize: '11px', color: tab.label === 'Profile' ? '#1a3a33' : '#888' }}>{tab.label}</p>
-          </div>
-        ))}
-      </div>
+      <BottomNav />
     </div>
   )
 }

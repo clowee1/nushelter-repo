@@ -1,10 +1,37 @@
+import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { useState } from 'react'
+import BottomNav from '../components/BottomNav'
 
 function DonateConfirmedPage() {
   const navigate = useNavigate()
   const { state } = useLocation()
   const [umbrellaId] = useState('NUS-' + Math.floor(Math.random() * 900 + 100))
+  const [realCode, setRealCode] = useState(null)
+
+  useEffect(() => {
+    const sendDonation = async () => {
+      try {
+        const res = await fetch('http://127.0.0.1:5000/donate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify({
+            colour: state?.hex || state?.colorName,
+            nickname: state?.nickname || state?.colorName,
+            condition: state?.condition,
+            location_id: state?.location_id 
+          })
+        })
+        const data = await res.json()
+        if (res.ok) {
+          setRealCode(data.umbrella.umbrella_code)
+        }
+      } catch (e) {}
+    }
+    sendDonation()
+  }, [])
 
   return (
     <div style={{ fontFamily: 'sans-serif', minHeight: '100vh', backgroundColor: '#f0f0f0', paddingBottom: '80px' }}>
@@ -19,11 +46,11 @@ function DonateConfirmedPage() {
       <div style={{ padding: '24px', maxWidth: '440px', margin: '0 auto', textAlign: 'center' }}>
         <div style={{ width: '72px', height: '72px', borderRadius: '50%', backgroundColor: state?.hex || '#1a3a33', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '36px', margin: '24px auto 16px' }}>☂️</div>
 
-        <h1 style={{ fontSize: '22px', fontWeight: '700', margin: '0 0 20px' }}>Your umbrella is registered!</h1>
+        <h1 style={{ fontSize: '22px', fontWeight: '700', margin: '0 0 20px', color: '#1a3a33' }}>Your umbrella is registered!</h1>
 
         <div style={{ backgroundColor: '#1a3a33', borderRadius: '10px', padding: '14px 24px', display: 'inline-block', marginBottom: '24px' }}>
           <p style={{ margin: 0, fontSize: '11px', letterSpacing: '1.5px', color: 'rgba(255,255,255,0.6)', fontWeight: '600' }}>UMBRELLA ID</p>
-          <p style={{ margin: 0, fontSize: '28px', fontWeight: '700', color: 'white', letterSpacing: '2px' }}>{umbrellaId}</p>
+          <p style={{ margin: 0, fontSize: '28px', fontWeight: '700', color: 'white', letterSpacing: '2px' }}>{realCode || umbrellaId}</p>
         </div>
 
         <div style={{ backgroundColor: '#fffbf0', border: '1px solid #e8d9a0', borderRadius: '10px', padding: '16px', textAlign: 'left', marginBottom: '12px' }}>
@@ -35,7 +62,7 @@ function DonateConfirmedPage() {
             <div style={{ width: '36px', height: '36px', backgroundColor: '#1a3a33', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', flexShrink: 0 }}>☂️</div>
             <div style={{ textAlign: 'left' }}>
               <p style={{ margin: 0, fontSize: '10px', color: '#aaa', letterSpacing: '1px' }}>STICKER READS</p>
-              <p style={{ margin: 0, fontWeight: '700', fontSize: '16px', letterSpacing: '1px' }}>{umbrellaId}</p>
+              <p style={{ margin: 0, fontWeight: '700', fontSize: '16px', letterSpacing: '1px' }}>{realCode || umbrellaId}</p>
               <p style={{ margin: 0, fontSize: '11px', color: '#aaa' }}>NUS Umbrella Sharing · scan to borrow</p>
             </div>
           </div>
@@ -55,14 +82,7 @@ function DonateConfirmedPage() {
         </button>
       </div>
 
-      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: 'white', borderTop: '1px solid #eee', display: 'flex', justifyContent: 'space-around', padding: '12px 0' }}>
-        {[{icon:'🗺️',label:'Map'},{icon:'☂️',label:'Borrow'},{icon:'🎁',label:'Donate'},{icon:'👤',label:'Profile'}].map(tab => (
-          <div key={tab.label} style={{ textAlign: 'center', cursor: 'pointer' }} onClick={() => tab.label === 'Profile' && navigate('/profile')}>
-            <div style={{ fontSize: '22px' }}>{tab.icon}</div>
-            <p style={{ margin: 0, fontSize: '11px', color: tab.label === 'Donate' ? '#1a3a33' : '#888' }}>{tab.label}</p>
-          </div>
-        ))}
-      </div>
+      <BottomNav />
     </div>
   )
 }

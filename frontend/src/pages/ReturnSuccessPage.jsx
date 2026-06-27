@@ -1,4 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom'
+import BottomNav from '../components/BottomNav'
 
 function ReturnSuccessPage() {
   const navigate = useNavigate()
@@ -15,18 +16,7 @@ function ReturnSuccessPage() {
         Back to Profile
       </button>
 
-      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: 'white', borderTop: '1px solid #eee', display: 'flex', justifyContent: 'space-around', padding: '12px 0' }}>
-        {[{ icon: '🗺️', label: 'Map' }, { icon: '☂️', label: 'Borrow' }, { icon: '🎁', label: 'Donate' }, { icon: '👤', label: 'Profile' }].map(tab => (
-          <div key={tab.label} style={{ textAlign: 'center', cursor: 'pointer' }} onClick={() => {
-            if (tab.label === 'Donate') navigate('/donate')
-            if (tab.label === 'Profile') navigate('/profile')
-            if (tab.label === 'Borrow') navigate('/borrow')
-          }}>
-            <div style={{ fontSize: '22px' }}>{tab.icon}</div>
-            <p style={{ margin: 0, fontSize: '11px', color: '#888' }}>{tab.label}</p>
-          </div>
-        ))}
-      </div>
+      <BottomNav />
     </div>
   )
 }
