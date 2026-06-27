@@ -17,6 +17,7 @@ load_dotenv()
 
 app = Flask(__name__)
 app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=24)
 
 jwt = JWTManager(app)
 
@@ -150,7 +151,7 @@ def donate():
 
     data = request.get_json()
 
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     colour = data["colour"]
     nickname = data["nickname"]
     condition = data["condition"]
@@ -209,7 +210,7 @@ def borrow():
 
     data = request.get_json()
 
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     umbrella_id = data["umbrella_id"]
     
     if has_overdue_umbrella(user_id):
@@ -291,7 +292,7 @@ def return_umbrella():
     data = request.get_json()
     location_id = data["location_id"]
     umbrella_id = data["umbrella_id"]
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
 
     active_log = (
         supabase.table("borrow_logs")
@@ -419,7 +420,7 @@ def has_overdue_umbrella(user_id):
 @jwt_required()
 def my_borrows():
 
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
 
     result = (
         supabase.table("borrow_logs")
@@ -435,13 +436,13 @@ def my_borrows():
 @jwt_required()
 def profile():
     
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
 
     user = (
         supabase.table("users")
         .select("user_id, name, email")
         .eq("user_id", user_id)
-        .execute()
+        .execute().data[0]
     )
 
     donated = (
