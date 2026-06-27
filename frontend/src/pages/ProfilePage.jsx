@@ -13,6 +13,7 @@ function ProfilePage() {
   const [timerPercent, setTimerPercent] = useState(100)
   const [profileData, setProfileData] = useState(null)
   const [donatedUmbrellas, setDonatedUmbrellas] = useState([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const token = localStorage.getItem('token')
@@ -54,6 +55,7 @@ function ProfilePage() {
         const borrow = JSON.parse(localStorage.getItem('activeBorrow') || 'null')
         if (borrow) setActiveBorrow(borrow)
       }
+      setLoading(false)
     }
 
     fetchAll()
@@ -134,36 +136,39 @@ function ProfilePage() {
           </div>
         )}
 
-        <div style={{ backgroundColor: 'white', borderRadius: '12px', padding: '20px' }}>
-          <h3 style={{ margin: '0 0 16px', fontSize: '15px', color: '#333' }}>My Donated Umbrellas</h3>
-          {donatedUmbrellas.length === 0 && (
-            <p style={{ fontSize: '13px', color: '#aaa', textAlign: 'center', margin: '0 0 12px' }}>No donated umbrellas yet.</p>
-          )}
-          {donatedUmbrellas.map(umbrella => (
-            <div key={umbrella.umbrella_id}
-              onClick={() => navigate('/umbrella', { state: { umbrella: {
-                code: umbrella.umbrella_code,
-                name: umbrella.nickname,
-                colour: umbrella.colour,
-                studentsHelped: 0,
-                daysActive: 0,
-                locations: 0,
-                donatedDate: '',
-                donatedLocation: ''
-              }}})}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', marginBottom: '12px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ width: '40px', height: '40px', backgroundColor: umbrella.colour || '#1a3a33', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>☂️</div>
-                <div>
-                  <p style={{ margin: 0, fontWeight: '600', fontSize: '14px' }}>{umbrella.umbrella_code} · {umbrella.nickname}</p>
-                  <p style={{ margin: 0, fontSize: '12px', color: umbrella.status === 'Available' ? 'green' : '#d97706' }}>{umbrella.status}</p>
-                </div>
-              </div>
-              <span style={{ color: '#ccc' }}>›</span>
+    <div style={{ backgroundColor: 'white', borderRadius: '12px', padding: '20px' }}>
+    <h3 style={{ margin: '0 0 16px', fontSize: '15px', color: '#333' }}>My Donated Umbrellas</h3>
+    {loading ? (
+      <p style={{ color: '#aaa', textAlign: 'center', fontSize: '13px' }}>Loading...</p>
+    ) : donatedUmbrellas.length === 0 ? (
+      <p style={{ fontSize: '13px', color: '#aaa', textAlign: 'center', margin: '0 0 12px' }}>No donated umbrellas yet.</p>
+    ) : (
+      donatedUmbrellas.map(umbrella => (
+        <div key={umbrella.umbrella_id}
+          onClick={() => navigate('/umbrella', { state: { umbrella: {
+            code: umbrella.umbrella_code,
+            name: umbrella.nickname,
+            colour: umbrella.colour,
+            studentsHelped: 0,
+            daysActive: 0,
+            locations: 0,
+            donatedDate: '',
+            donatedLocation: ''
+          }}})}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', marginBottom: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ width: '40px', height: '40px', backgroundColor: umbrella.colour || '#1a3a33', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>☂️</div>
+            <div>
+              <p style={{ margin: 0, fontWeight: '600', fontSize: '14px' }}>{umbrella.umbrella_code} · {umbrella.nickname}</p>
+              <p style={{ margin: 0, fontSize: '12px', color: umbrella.status === 'Available' ? 'green' : '#d97706' }}>{umbrella.status}</p>
             </div>
-          ))}
-          <p onClick={() => navigate('/donate')} style={{ textAlign: 'center', fontSize: '13px', color: '#1a3a33', marginTop: '8px', cursor: 'pointer' }}>+ Donate another umbrella</p>
+          </div>
+          <span style={{ color: '#ccc' }}>›</span>
         </div>
+      ))
+    )}
+    <p onClick={() => navigate('/donate')} style={{ textAlign: 'center', fontSize: '13px', color: '#1a3a33', marginTop: '8px', cursor: 'pointer' }}>+ Donate another umbrella</p>
+  </div>
 
         <div style={{ backgroundColor: 'white', borderRadius: '12px', padding: '20px' }}>
           <h3 style={{ margin: '0 0 16px', fontSize: '15px', color: '#333' }}>My Stats</h3>
