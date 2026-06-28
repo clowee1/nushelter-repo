@@ -467,5 +467,41 @@ def profile():
         }
     }
 
+@app.route('/thank_you_note')
+@jwt_required()
+def note():
+
+    sender_id = int(get_jwt_identity())
+
+    data = request.get_json()
+    umbrella_id = data["umbrella_id"]
+    message = data["message"]
+
+    borrow_log = (supabase.table("borrow_logs")
+                  .select("*")
+                  .eq("umbrella_id", umbrella_id)
+                  .eq("borrower_id", sender_id)
+                  .execute())
+
+    if not borrow_log.data:
+        return {"error": "You have not borrowed this umbrella"}, 403
+
+    umbrella = (supabase.table("umbrellas")
+                   .select("owner_id")
+                   .eq("umbrella_id", umbrella_id)
+                   .execute().data[0])
+
+    receiver_id = umbrella["owner_id"]
+
+    supabase.table("thank_you_notes").insert({
+        "sender_id": sender_id,
+        "receiver_id": receiver_id,
+        "umbrella_id": umbrella_id,
+        "message": message
+    }).execute()
+
+    return {"message": "Thank you note sent!"}
+
+
 if __name__ == "__main__":
     app.run(debug=True)
