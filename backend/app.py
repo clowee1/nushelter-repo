@@ -467,7 +467,7 @@ def profile():
         }
     }
 
-@app.route('/thank_you_note')
+@app.route('/thank_you_note', methods=["POST"])
 @jwt_required()
 def note():
 
@@ -502,6 +502,21 @@ def note():
 
     return {"message": "Thank you note sent!"}
 
+@app.route('/my_notes')
+@jwt_required()
+def my_notes():
+
+    user_id = int(get_jwt_identity())
+
+    notes = (
+        supabase.table("thank_you_notes")
+        .select("*")
+        .eq("receiver_id", user_id)
+        .order("created_at", desc = True)
+        .execute()
+    )
+
+    return notes.data
 
 if __name__ == "__main__":
     app.run(debug=True)
