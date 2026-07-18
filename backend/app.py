@@ -512,7 +512,7 @@ def my_notes():
 
     return notes.data 
 
-@app.route("recommended-drop-off", methods=["GET"])
+@app.route("/recommended-drop-off", methods=["GET"])
 @jwt_required()
 def recommend_dropoff():
     user_lat = request.args.get("lat", type=float)
