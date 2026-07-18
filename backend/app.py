@@ -2,7 +2,7 @@ from flask import Flask, request
 from flask_cors import CORS
 from dotenv import load_dotenv
 import os
-from supabase import create_client
+from supabase_client import supabase
 from datetime import datetime, timedelta, timezone
 from werkzeug.security import generate_password_hash
 from werkzeug.security import check_password_hash
@@ -12,6 +12,7 @@ from flask_jwt_extended import (
     jwt_required,
     get_jwt_identity
 )
+from recommendation import get_top_recommendations
 
 load_dotenv()
 
@@ -22,13 +23,6 @@ app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=24)
 jwt = JWTManager(app)
 
 CORS(app)
-
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
-supabase = create_client(
-    SUPABASE_URL,
-    SUPABASE_KEY
-)
 
 @app.route("/")
 def home():
@@ -516,7 +510,19 @@ def my_notes():
         .execute()
     )
 
-    return notes.data
+    return notes.data 
+
+@app.route("recommended-drop-off", methods=["GET"])
+@jwt_required()
+def recommend_dropoff():
+    user_lat = request.args.get("lat", type=float)
+    user_lon = request.args.get("lon", type=float)
+    
+    if user_lat is None or user_lon is None:
+        return {"error": "lat and lon query params are required"}, 400
+
+    recommendations = get_top_recommendations(user_lat, user_lon)
+    return {"recommendations": recommendations}
 
 if __name__ == "__main__":
     app.run(debug=True)
