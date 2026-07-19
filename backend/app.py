@@ -35,9 +35,9 @@ def register():
 
     data = request.get_json()
 
-    name = data["name"]
-    email = data["email"]
-    password = data["password"]
+    name = data.get("name", "")
+    email = data.get("email", "")
+    password = data.get("password", "")
 
     if len(password) < 8:
         return {
