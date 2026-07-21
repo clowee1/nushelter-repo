@@ -6,10 +6,18 @@ function ReturnNotePage() {
   const navigate = useNavigate()
   const { state } = useLocation()
   const [note, setNote] = useState('')
-  const activeBorrow = JSON.parse(localStorage.getItem('activeBorrow') || 'null')
+  const user = JSON.parse(localStorage.getItem('user') || '{}')
+  const activeBorrowKey = `activeBorrow:${user.user_id}`
+  const activeBorrow = JSON.parse(localStorage.getItem(activeBorrowKey) || 'null')
   const location = state?.location
+  const locationId = location?.station_id ?? location?.id ?? state?.location_id
 
   const handleReturn = async () => {
+    if (!activeBorrow?.umbrella_id || locationId == null) {
+      alert('Please choose a return location and try again.')
+      return
+    }
+
     try {
       const res = await fetch('http://127.0.0.1:5000/return', {
         method: 'POST',
@@ -19,7 +27,7 @@ function ReturnNotePage() {
         },
         body: JSON.stringify({
           umbrella_id: activeBorrow.umbrella_id,
-          location_id: state?.location_id
+          location_id: locationId
         })
       })
       const data = await res.json()
@@ -27,8 +35,29 @@ function ReturnNotePage() {
         alert(data.message)
         return
       }
-    } catch (e) {}
-    localStorage.removeItem('activeBorrow')
+
+      // Send thank you note if user wrote one
+      if (note.trim()) {
+        try {
+          await fetch('http://127.0.0.1:5000/thank_you_note', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({
+              umbrella_id: activeBorrow.umbrella_id,
+              message: note
+            })
+          })
+        } catch (e) {}
+      }
+
+    } catch (e) {
+      alert('Could not connect to the server. Your umbrella is still marked as borrowed.')
+      return
+    }
+    localStorage.removeItem(activeBorrowKey)
     navigate('/return/success', { state: { location, note } })
   }
 
@@ -36,7 +65,7 @@ function ReturnNotePage() {
     <div style={{ fontFamily: 'sans-serif', minHeight: '100vh', backgroundColor: '#f0f0f0', paddingBottom: '80px' }}>
       <div style={{ backgroundColor: '#1a3a33', padding: '48px 24px 24px', color: 'white' }}>
         <span onClick={() => navigate(-1)} style={{ cursor: 'pointer', fontSize: '14px', marginBottom: '16px', display: 'block', opacity: 0.8 }}>‹ Back</span>
-        <h1 style={{ margin: '0 0 4px', fontSize: '24px', fontWeight: '700' }}>Leave a Thank-You Note</h1>
+        <h1 style={{ margin: '0 0 4px', fontSize: '24px', fontWeight: '700', color: 'white' }}>Leave a Thank-You Note</h1>
         <p style={{ margin: 0, opacity: 0.7, fontSize: '14px' }}>Optional — the donor will see this anonymously.</p>
       </div>
 

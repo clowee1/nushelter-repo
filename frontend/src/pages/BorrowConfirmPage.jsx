@@ -29,7 +29,8 @@ function BorrowConfirmPage() {
       umbrella_id: umbrella.umbrella_id,
       borrowedAt: new Date().toISOString()
     }
-    localStorage.setItem('activeBorrow', JSON.stringify(borrowData))
+    const user = JSON.parse(localStorage.getItem('user') || '{}')
+    localStorage.setItem(`activeBorrow:${user.user_id}`, JSON.stringify(borrowData))
     navigate('/borrow/success', { state: { umbrella } })
   }
 

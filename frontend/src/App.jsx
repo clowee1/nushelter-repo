@@ -15,6 +15,7 @@ import ReturnLocationPage from './pages/ReturnLocationPage'
 import ReturnNotePage from './pages/ReturnNotePage'
 import ReturnSuccessPage from './pages/ReturnSuccessPage'
 import UmbrellaDetailPage from './pages/UmbrellaDetailPage'
+import MapPage from './pages/MapPage'
 
 function App() {
   return (
@@ -36,6 +37,7 @@ function App() {
         <Route path="/return/note" element={<ReturnNotePage />} />
         <Route path="/return/success" element={<ReturnSuccessPage />} />
         <Route path="/umbrella" element={<UmbrellaDetailPage />} />
+        <Route path="/map" element={<MapPage />} />
       </Routes>
     </BrowserRouter>
   )

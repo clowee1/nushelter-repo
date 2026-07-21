@@ -1,9 +1,6 @@
 import { useNavigate, useLocation } from 'react-router-dom'
-
-const MOCK_NOTES = [
-  { message: 'Caught in the rain between lectures — this literally saved me. Thank you!', location: 'Central Library', time: 'Tue, 2h ago' },
-  { message: 'Such a thoughtful initiative. You made my whole day better!', location: 'COM1 Lobby', time: 'Mon, 1d ago' },
-]
+import { useEffect, useState } from 'react'
+import BottomNav from '../components/BottomNav'
 
 const MOCK_JOURNEY = [
   { location: 'CLB', date: '3 Jan' },
@@ -15,6 +12,7 @@ const MOCK_JOURNEY = [
 function UmbrellaDetailPage() {
   const navigate = useNavigate()
   const { state } = useLocation()
+  const [notes, setNotes] = useState([])
   const umbrella = state?.umbrella || {
     code: 'NUS-042',
     name: 'Blue Polka Dot',
@@ -25,15 +23,39 @@ function UmbrellaDetailPage() {
     donatedLocation: 'CLB Level 1'
   }
 
+  useEffect(() => {
+    const fetchNotes = async () => {
+      try {
+        const res = await fetch('http://127.0.0.1:5000/my_notes', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        })
+        const data = await res.json()
+        setNotes(data)
+      } catch (e) {}
+    }
+    fetchNotes()
+  }, [])
+
+  const formatTime = (timestamp) => {
+    if (!timestamp) return ''
+    const date = new Date(timestamp)
+    const now = new Date()
+    const diff = Math.floor((now - date) / 1000 / 60)
+    if (diff < 60) return `${diff}m ago`
+    if (diff < 1440) return `${Math.floor(diff / 60)}h ago`
+    return `${Math.floor(diff / 1440)}d ago`
+  }
+
   return (
     <div style={{ fontFamily: 'sans-serif', minHeight: '100vh', backgroundColor: '#f0f0f0', paddingBottom: '80px' }}>
-      {/* Header */}
       <div style={{ backgroundColor: '#1a3a33', padding: '48px 24px 32px', color: 'white' }}>
         <span onClick={() => navigate('/profile')} style={{ cursor: 'pointer', fontSize: '14px', marginBottom: '16px', display: 'block', opacity: 0.8 }}>‹ My Umbrellas</span>
         <div style={{ display: 'inline-block', backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: '20px', padding: '4px 12px', fontSize: '12px', marginBottom: '12px' }}>
           ☂ {umbrella.code} · {umbrella.name}
         </div>
-        <h1 style={{ margin: '0 0 8px', fontSize: '28px', fontStyle: 'italic', fontWeight: '700', lineHeight: 1.2 }}>
+        <h1 style={{ margin: '0 0 8px', fontSize: '28px', fontStyle: 'italic', fontWeight: '700', lineHeight: 1.2, color: 'white' }}>
           sheltered <span style={{ color: '#7ecfb3' }}>{umbrella.studentsHelped} students</span><br />across campus.
         </h1>
         <p style={{ margin: 0, fontSize: '13px', opacity: 0.6 }}>donated {umbrella.donatedDate} · {umbrella.donatedLocation}</p>
@@ -69,32 +91,25 @@ function UmbrellaDetailPage() {
 
         {/* Thank you notes */}
         <div style={{ backgroundColor: 'white', borderRadius: '12px', padding: '20px' }}>
-          <p style={{ margin: '0 0 16px', fontWeight: '700', fontSize: '13px', letterSpacing: '1px', color: '#888' }}>THANK-YOU NOTES ({MOCK_NOTES.length})</p>
-          {MOCK_NOTES.map((note, i) => (
-            <div key={i} style={{ backgroundColor: '#1a3a33', borderRadius: '10px', padding: '16px', marginBottom: i < MOCK_NOTES.length - 1 ? '12px' : 0, color: 'white' }}>
+          <p style={{ margin: '0 0 16px', fontWeight: '700', fontSize: '13px', letterSpacing: '1px', color: '#888' }}>
+            THANK-YOU NOTES ({notes.length})
+          </p>
+          {notes.length === 0 && (
+            <p style={{ color: '#aaa', fontSize: '13px', textAlign: 'center' }}>No thank-you notes yet.</p>
+          )}
+          {notes.map((note, i) => (
+            <div key={note.note_id || i} style={{ backgroundColor: '#1a3a33', borderRadius: '10px', padding: '16px', marginBottom: i < notes.length - 1 ? '12px' : 0, color: 'white' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
                 <span style={{ backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: '20px', padding: '2px 10px', fontSize: '12px' }}>anonymous</span>
-                <span style={{ fontSize: '12px', opacity: 0.6 }}>{note.time}</span>
+                <span style={{ fontSize: '12px', opacity: 0.6 }}>{formatTime(note.created_at)}</span>
               </div>
               <p style={{ margin: '0 0 10px', fontSize: '14px', fontStyle: 'italic', lineHeight: 1.5 }}>"{note.message}"</p>
-              <p style={{ margin: 0, fontSize: '12px', opacity: 0.6 }}>📍 Returned at {note.location}</p>
             </div>
           ))}
         </div>
       </div>
 
-      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: 'white', borderTop: '1px solid #eee', display: 'flex', justifyContent: 'space-around', padding: '12px 0' }}>
-        {[{ icon: '🗺️', label: 'Map' }, { icon: '☂️', label: 'Borrow' }, { icon: '🎁', label: 'Donate' }, { icon: '👤', label: 'Profile' }].map(tab => (
-          <div key={tab.label} style={{ textAlign: 'center', cursor: 'pointer' }} onClick={() => {
-            if (tab.label === 'Donate') navigate('/donate')
-            if (tab.label === 'Profile') navigate('/profile')
-            if (tab.label === 'Borrow') navigate('/borrow')
-          }}>
-            <div style={{ fontSize: '22px' }}>{tab.icon}</div>
-            <p style={{ margin: 0, fontSize: '11px', color: tab.label === 'Profile' ? '#1a3a33' : '#888' }}>{tab.label}</p>
-          </div>
-        ))}
-      </div>
+      <BottomNav />
     </div>
   )
 }

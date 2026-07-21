@@ -7,6 +7,7 @@ function ProfilePage() {
   const navigate = useNavigate()
   const location = useLocation()
   const user = JSON.parse(localStorage.getItem('user') || '{}')
+  const activeBorrowKey = `activeBorrow:${user.user_id}`
   const [activeBorrow, setActiveBorrow] = useState(null)
   const [timeLeft, setTimeLeft] = useState('')
   const [timerColor, setTimerColor] = useState('#1a3a33')
@@ -39,27 +40,31 @@ function ProfilePage() {
         const data = await res.json()
         const active = data.find(b => b.status === 'Active')
         if (active) {
-          const stored = JSON.parse(localStorage.getItem('activeBorrow') || 'null')
-          setActiveBorrow({
+          const stored = JSON.parse(localStorage.getItem(activeBorrowKey) || 'null')
+          const confirmedBorrow = {
             code: stored?.code || `NUS-${active.umbrella_id}`,
             name: stored?.name || 'Umbrella',
             umbrella_id: active.umbrella_id,
             borrowedAt: active.borrowed_at,
             location: stored?.location || ''
-          })
+          }
+          // The API is the source of truth; cache this confirmed loan so the
+          // return flow can use its umbrella ID after a refresh or app update.
+          localStorage.setItem(activeBorrowKey, JSON.stringify(confirmedBorrow))
+          setActiveBorrow(confirmedBorrow)
         } else {
           setActiveBorrow(null)
-          localStorage.removeItem('activeBorrow')
+          localStorage.removeItem(activeBorrowKey)
         }
       } catch (e) {
-        const borrow = JSON.parse(localStorage.getItem('activeBorrow') || 'null')
-        if (borrow) setActiveBorrow(borrow)
+        // Never show a cached loan when the authenticated source cannot confirm it.
+        setActiveBorrow(null)
       }
       setLoading(false)
     }
 
     fetchAll()
-  }, [location])
+  }, [location, activeBorrowKey])
 
   useEffect(() => {
     if (!activeBorrow) return
@@ -90,7 +95,7 @@ function ProfilePage() {
   const handleSignOut = () => {
     localStorage.removeItem('user')
     localStorage.removeItem('token')
-    localStorage.removeItem('activeBorrow')
+    localStorage.removeItem(activeBorrowKey)
     navigate('/')
   }
 
