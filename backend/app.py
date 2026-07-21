@@ -256,6 +256,7 @@ def borrow():
     supabase.table("borrow_logs").insert({
         "umbrella_id": umbrella_id,
         "borrower_id": user_id,
+        "borrowed_lication": umbrella["location_id"],
         "due_at": due_at,
         "status": "Active"
     }).execute()
@@ -347,6 +348,7 @@ def return_umbrella():
 
     supabase.table("borrow_logs").update({
         "returned_at": datetime.now(timezone.utc).isoformat(),
+        "returned_location": location_id,
         "status": "Returned"
     }).eq(
         "borrow_id",
@@ -523,6 +525,69 @@ def recommend_dropoff():
 
     recommendations = get_top_recommendations(user_lat, user_lon)
     return {"recommendations": recommendations}
+
+@app.route("/umbrella-stats")
+@jwt_required()
+def retrieve_umbrella_stats():
+    
+    umbrella_id = request.args.get("umbrella_id")
+    user_id = int(get_jwt_identity())
+
+    umbrella = (
+        supabase.table("umbrellas")
+        .select("umbrella_id, umbrella_code, nickname, colour, status, created_at, location_id, owner_id")
+        .eq("umbrella_id", umbrella_id)
+        .execute()
+    )
+
+    if not umbrella.data:
+        return {"message": "Umbrella not found"}, 404
+    
+    if umbrella.data[0]["owner_id"] != user_id:
+        return {"message": "Unauthorised"}, 403
+    
+    created_at = datetime.fromisoformat(
+        umbrella["created_at"].replace("Z", "+00:00")
+    )
+
+    days_active = (datetime.now(timezone.utc) - created_at).days
+
+    borrow_logs = (
+        supabase.table("borrow_logs")
+        .select("*")
+        .eq("umbrella_id", umbrella_id)
+        .eq("status", "Returned")
+        .execute()
+    )
+
+    students_helped = len(borrow_logs.data)
+
+    locations = set()
+
+    for log in borrow_logs.data:
+        locations.add(log["borrow_station_id"])
+        locations.add(log["return_station_id"])
+
+    locations_visited = len(locations)
+
+    notes = (
+        supabase.table("thank_you_notes")
+        .select("note_id, message, created_at")
+        .eq("umbrella_id", umbrella_id)
+        .order("created_at", desc = True)
+        .execute()
+    )
+
+    return {
+        "umbrella": umbrella, 
+        "stats": {
+            "students_helped" : students_helped,
+            "days_active": days_active,
+            "locations_visited": locations_visited
+        },
+        "journey": [], 
+        "notes": notes.data
+    }
 
 if __name__ == "__main__":
     app.run(debug=True)
