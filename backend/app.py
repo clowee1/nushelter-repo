@@ -262,7 +262,7 @@ def borrow():
     supabase.table("borrow_logs").insert({
         "umbrella_id": umbrella_id,
         "borrower_id": user_id,
-        "borrowed_lication": umbrella["location_id"],
+        "borrowed_location": umbrella["location_id"],
         "due_at": due_at,
         "status": "Active"
     }).execute()
@@ -561,11 +561,13 @@ def retrieve_umbrella_stats():
     if not umbrella.data:
         return {"message": "Umbrella not found"}, 404
     
-    if umbrella.data[0]["owner_id"] != user_id:
+    umbrella_data = umbrella.data[0]
+    
+    if umbrella_data["owner_id"] != user_id:
         return {"message": "Unauthorised"}, 403
     
     created_at = datetime.fromisoformat(
-        umbrella["created_at"].replace("Z", "+00:00")
+        umbrella_data["created_at"].replace("Z", "+00:00")
     )
 
     days_active = (datetime.now(timezone.utc) - created_at).days
@@ -605,7 +607,7 @@ def retrieve_umbrella_stats():
     )
     
     return {
-        "umbrella": umbrella, 
+        "umbrella": umbrella_data, 
         "stats": {
             "students_helped" : students_helped,
             "days_active": days_active,
