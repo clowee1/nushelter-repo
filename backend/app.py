@@ -189,6 +189,12 @@ def donate():
         "current_count": station["current_count"] + 1
     }).eq("station_id", location_id).execute()
 
+
+    supabase.table("umbrella_journey").insert({
+        "umbrella_id": umbrella_id,
+        "location_id": location_id,
+        "action": "Donated"
+    }).execute()
     
     return {
         "message": "Umbrella registered successfully",
@@ -270,6 +276,12 @@ def borrow():
         supabase.table("stations").update({
             "current_count": max(0, station["current_count"] - 1)
         }).eq("station_id", umbrella["location_id"]).execute()
+
+        supabase.table("umbrella_journey").insert({
+        "umbrella_id": umbrella_id,
+        "location_id": umbrella["location_id"],
+        "action": "Borrowed"
+    }).execute()
 
     return {
         "message": "Umbrella borrowed successfully",
@@ -354,7 +366,13 @@ def return_umbrella():
         "borrow_id",
         log["borrow_id"]
     ).execute()
-
+    
+    supabase.table("umbrella_journey").insert({
+        "umbrella_id": umbrella_id,
+        "location_id": location_id,
+        "action": "Returned"
+    }).execute()
+        
     supabase.table("users").update({
         "is_suspended": False
     }).eq(
@@ -578,6 +596,14 @@ def retrieve_umbrella_stats():
         .execute()
     )
 
+    journey = (
+        supabase.table("umbrella_journey")
+        .select("created_at, location_id, action")
+        .eq("umbrella_id", umbrella_id)
+        .order("created_at")
+        .execute()
+    )
+    
     return {
         "umbrella": umbrella, 
         "stats": {
@@ -585,7 +611,7 @@ def retrieve_umbrella_stats():
             "days_active": days_active,
             "locations_visited": locations_visited
         },
-        "journey": [], 
+        "journey": journey.data, 
         "notes": notes.data
     }
 
