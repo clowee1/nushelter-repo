@@ -16,6 +16,9 @@ import ReturnNotePage from './pages/ReturnNotePage'
 import ReturnSuccessPage from './pages/ReturnSuccessPage'
 import UmbrellaDetailPage from './pages/UmbrellaDetailPage'
 import MapPage from './pages/MapPage'
+import NotificationsPage from './pages/NotificationsPage'
+import PrivacyPage from './pages/PrivacyPage'
+import HelpPage from './pages/HelpPage'
 
 function App() {
   return (
@@ -38,6 +41,9 @@ function App() {
         <Route path="/return/success" element={<ReturnSuccessPage />} />
         <Route path="/umbrella" element={<UmbrellaDetailPage />} />
         <Route path="/map" element={<MapPage />} />
+        <Route path="/notifications" element={<NotificationsPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/help" element={<HelpPage />} />
       </Routes>
     </BrowserRouter>
   )
