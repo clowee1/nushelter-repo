@@ -1,20 +1,29 @@
 import { useNavigate, useLocation } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import BottomNav from '../components/BottomNav'
-
-const LOCATIONS = [
-  { id: 1, name: 'COM1 Lobby', capacity: 10, available: 0 },
-  { id: 2, name: 'UTown Bus Stop', capacity: 10, available: 0 },
-  { id: 3, name: 'Central Library', capacity: 10, available: 0 },
-  { id: 4, name: 'LT27', capacity: 10, available: 0 },
-  { id: 5, name: 'Raffles Hall', capacity: 10, available: 0 },
-  { id: 6, name: 'FASS Bus Stop', capacity: 10, available: 0 },
-]
 
 function DonateLocationPage() {
   const navigate = useNavigate()
   const { state } = useLocation()
   const [location, setLocation] = useState(null)
+  const [stations, setStations] = useState([])
+  const [recommendations, setRecommendations] = useState([])
+
+  useEffect(() => {
+    fetch('http://127.0.0.1:5000/stations')
+      .then(res => res.json())
+      .then(data => setStations(data))
+      .catch(() => {})
+
+    fetch('http://127.0.0.1:5000/recommended-drop-off?lat=1.2966&lon=103.7764', {
+      headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+    })
+      .then(res => res.json())
+      .then(data => setRecommendations(data.recommendations || []))
+      .catch(() => {})
+  }, [])
+
+  const isAiPick = (station_id) => recommendations.some(r => r.station_id === station_id)
 
   return (
     <div style={{ fontFamily: 'sans-serif', minHeight: '100vh', backgroundColor: '#f0f0f0', paddingBottom: '80px' }}>
@@ -32,16 +41,29 @@ function DonateLocationPage() {
       <div style={{ padding: '24px', maxWidth: '440px', margin: '0 auto' }}>
         <h2 style={{ fontSize: '17px', fontWeight: '700', marginBottom: '16px' }}>Where will you drop it off?</h2>
 
-        {LOCATIONS.map(loc => (
-          <div key={loc.id} onClick={() => setLocation(loc.id)}
-            style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 16px', borderRadius: '8px', cursor: 'pointer', border: `1.5px solid ${location === loc.id ? '#1a3a33' : '#e0e0e0'}`, backgroundColor: location === loc.id ? '#f0f5f3' : 'white', marginBottom: '10px' }}>
-            <div style={{ width: '18px', height: '18px', borderRadius: '50%', border: `2px solid ${location === loc.id ? '#1a3a33' : '#ccc'}`, backgroundColor: location === loc.id ? '#1a3a33' : 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              {location === loc.id && <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'white' }} />}
+        {stations.length === 0 && (
+          <p style={{ color: '#aaa', textAlign: 'center' }}>Loading stations...</p>
+        )}
+
+        {stations.map(loc => (
+          <div key={loc.station_id} onClick={() => setLocation(loc.station_id)}
+            style={{
+              borderRadius: '12px', padding: '16px', marginBottom: '10px', cursor: 'pointer',
+              border: `1.5px solid ${location === loc.station_id ? '#1a3a33' : isAiPick(loc.station_id) ? '#1a3a33' : '#e0e0e0'}`,
+              backgroundColor: location === loc.station_id ? '#f0f5f3' : isAiPick(loc.station_id) ? '#f8fffe' : 'white'
+            }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+              <div style={{ width: '18px', height: '18px', borderRadius: '50%', border: `2px solid ${location === loc.station_id ? '#1a3a33' : '#ccc'}`, backgroundColor: location === loc.station_id ? '#1a3a33' : 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                {location === loc.station_id && <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'white' }} />}
+              </div>
+              <span style={{ fontWeight: '600', fontSize: '14px', flex: 1 }}>{loc.name}</span>
+              {isAiPick(loc.station_id) && (
+                <span style={{ backgroundColor: '#1a3a33', color: 'white', fontSize: '10px', padding: '2px 8px', borderRadius: '20px', fontWeight: '600' }}>AI Pick</span>
+              )}
             </div>
-            <div>
-              <p style={{ margin: 0, fontWeight: '600', fontSize: '14px', textAlign: 'left' }}>{loc.name}</p>
-              <p style={{ margin: 0, fontSize: '12px', color: '#888' }}>{loc.capacity} rack capacity · {loc.available} currently available</p>
-            </div>
+            <p style={{ margin: 0, fontSize: '12px', color: '#888', paddingLeft: '28px' }}>
+              {loc.capacity} rack capacity · {loc.current_count} currently available
+            </p>
           </div>
         ))}
 
@@ -50,13 +72,12 @@ function DonateLocationPage() {
           <button
             onClick={() => {
               if (!location) return
-              const selectedLoc = LOCATIONS.find(l => l.id === location)
+              const selectedLoc = stations.find(l => l.station_id === location)
               navigate('/donate/review', {
                 state: {
                   ...state,
-                  location: selectedLoc.name,
                   locationName: selectedLoc.name,
-                  location_id: selectedLoc.id
+                  location_id: selectedLoc.station_id
                 }
               })
             }}

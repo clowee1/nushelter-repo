@@ -8,6 +8,14 @@ function RegisterPage() {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const handleRegister = async () => {
+    if (!email.endsWith('@u.nus.edu')) {
+      alert('Only NUS email addresses (@u.nus.edu) are allowed.')
+      return
+    }
+    if (password.length < 8) {
+      alert('Password must be at least 8 characters.')
+      return
+    }
     try {
       const res = await fetch('http://127.0.0.1:5000/register', {
         method: 'POST',
@@ -16,16 +24,19 @@ function RegisterPage() {
       })
       const data = await res.json()
       if (res.ok) {
+        // Registration does not issue a session token, so take the user to login
+        // instead of loading an authenticated profile with stale browser data.
+        localStorage.removeItem('token')
+        localStorage.removeItem('activeBorrow')
         localStorage.setItem('user', JSON.stringify(data.user))
         navigate('/login')
       } else {
         alert(data.message)
       }
     } catch (error) {
-      alert("Unable to connect to server") // fallback if backend down
+      alert('Could not connect to server.')
     }
   }
-
   return (
     <div style={{ fontFamily: 'sans-serif', minHeight: '100vh', backgroundColor: '#f0f0f0' }}>
       {/* Dark header */}

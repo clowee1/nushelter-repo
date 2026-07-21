@@ -19,8 +19,7 @@ function LoginPage() {
       if (res.ok) {
         localStorage.setItem('token', data.token)
         localStorage.setItem('user', JSON.stringify(data.user))
-        console.log('token saved:', localStorage.getItem('token'))
-        setTimeout(() => navigate('/profile'), 100)
+        navigate('/profile')
 
       } else {
         alert(data.message)
