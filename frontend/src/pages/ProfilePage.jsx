@@ -151,6 +151,7 @@ function ProfilePage() {
       donatedUmbrellas.map(umbrella => (
         <div key={umbrella.umbrella_id}
           onClick={() => navigate('/umbrella', { state: { umbrella: {
+            umbrella_id: umbrella.umbrella_id,
             code: umbrella.umbrella_code,
             name: umbrella.nickname,
             colour: umbrella.colour,
@@ -192,8 +193,8 @@ function ProfilePage() {
         </div>
 
         <div style={{ backgroundColor: 'white', borderRadius: '12px', overflow: 'hidden' }}>
-          {[{ icon: <Bell size={18} color="#555" />, label: 'Notifications' }, { icon: <Shield size={18} color="#555" />, label: 'Privacy' }, { icon: <HelpCircle size={18} color="#555" />, label: 'Help & FAQ' }].map((item, i) => (
-            <div key={item.label} style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', borderBottom: i < 2 ? '1px solid #f0f0f0' : 'none' }}>
+          {[{ icon: <Bell size={18} color="#555" />, label: 'Notifications', path: '/notifications' }, { icon: <Shield size={18} color="#555" />, label: 'Privacy', path: '/privacy' }, { icon: <HelpCircle size={18} color="#555" />, label: 'Help & FAQ', path: '/help' }].map((item, i) => (
+            <div key={item.label} onClick={() => navigate(item.path)} style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', borderBottom: i < 2 ? '1px solid #f0f0f0' : 'none' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <span>{item.icon}</span>
                 <span style={{ fontSize: '15px' }}>{item.label}</span>

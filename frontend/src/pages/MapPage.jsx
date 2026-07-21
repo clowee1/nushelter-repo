@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet'
+import { CircleMarker, MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import BottomNav from '../components/BottomNav'
@@ -27,12 +27,13 @@ const getStationPosition = station => {
   return FALLBACK_RACK_COORDINATES[station.name?.trim().toLowerCase()] ?? null
 }
 
-function MapFocus({ station }) {
+function MapFocus({ station, userLocation, focusUser }) {
   const map = useMap()
 
   useEffect(() => {
     if (station?.mapPosition) map.flyTo(station.mapPosition, 17, { duration: 0.7 })
-  }, [map, station])
+    else if (focusUser && userLocation) map.flyTo(userLocation, 17, { duration: 0.7 })
+  }, [map, station, userLocation, focusUser])
 
   return null
 }
@@ -41,6 +42,11 @@ function MapPage() {
   const navigate = useNavigate()
   const [stations, setStations] = useState([])
   const [selectedStation, setSelectedStation] = useState(null)
+  const [userLocation, setUserLocation] = useState(null)
+  const [locationError, setLocationError] = useState('')
+  const [focusUser, setFocusUser] = useState(0)
+  const [shareLocation, setShareLocation] = useState(() => localStorage.getItem('shareLocation') !== 'false')
+  const hasLocated = useRef(false)
 
   useEffect(() => {
     fetch('http://127.0.0.1:5000/stations')
@@ -48,6 +54,45 @@ function MapPage() {
       .then(data => setStations(data))
       .catch(() => {})
   }, [])
+
+  useEffect(() => {
+    const syncPrivacyPreference = event => {
+      if (event.key === 'shareLocation') setShareLocation(event.newValue !== 'false')
+    }
+    window.addEventListener('storage', syncPrivacyPreference)
+    return () => window.removeEventListener('storage', syncPrivacyPreference)
+  }, [])
+
+  useEffect(() => {
+    if (!shareLocation) {
+      setUserLocation(null)
+      setLocationError('Location sharing is turned off in Privacy.')
+      return undefined
+    }
+
+    if (!navigator.geolocation) {
+      setLocationError('Your browser does not support location services.')
+      return undefined
+    }
+
+    const watchId = navigator.geolocation.watchPosition(
+      position => {
+        setUserLocation([position.coords.latitude, position.coords.longitude])
+        setLocationError('')
+        if (!hasLocated.current) {
+          hasLocated.current = true
+          setFocusUser(value => value + 1)
+        }
+      },
+      error => {
+        if (error.code === error.PERMISSION_DENIED) setLocationError('Location permission was not granted.')
+        else setLocationError('Your location is currently unavailable.')
+      },
+      { enableHighAccuracy: true, maximumAge: 10000, timeout: 10000 }
+    )
+
+    return () => navigator.geolocation.clearWatch(watchId)
+  }, [shareLocation])
 
   const mappedStations = useMemo(
     () => stations.map(station => ({ ...station, mapPosition: getStationPosition(station) })).filter(station => station.mapPosition),
@@ -87,7 +132,12 @@ function MapPage() {
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
             url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
           />
-          <MapFocus station={selectedStation} />
+          <MapFocus station={selectedStation} userLocation={userLocation} focusUser={focusUser} />
+          {userLocation && (
+            <CircleMarker center={userLocation} radius={10} pathOptions={{ color: 'white', weight: 3, fillColor: '#2563eb', fillOpacity: 1 }}>
+              <Popup>You are here</Popup>
+            </CircleMarker>
+          )}
           {mappedStations.map(station => (
             <Marker key={station.station_id} position={station.mapPosition} icon={rackIcon(station)} eventHandlers={{ click: () => selectStation(station) }}>
               <Popup>
@@ -97,11 +147,24 @@ function MapPage() {
             </Marker>
           ))}
         </MapContainer>
+        <button
+          onClick={() => {
+            if (userLocation) {
+              setSelectedStation(null)
+              setFocusUser(value => value + 1)
+            }
+          }}
+          disabled={!userLocation}
+          aria-label="Centre map on my location"
+          style={{ position: 'absolute', top: '12px', right: '12px', zIndex: 2, width: '42px', height: '42px', borderRadius: '8px', border: '1px solid #ccc', backgroundColor: 'white', color: userLocation ? '#1a3a33' : '#aaa', fontSize: '22px', cursor: userLocation ? 'pointer' : 'not-allowed', boxShadow: '0 1px 4px rgba(0,0,0,0.2)' }}>
+          ⌖
+        </button>
         {stations.length > 0 && mappedStations.length === 0 && (
           <p style={{ position: 'absolute', zIndex: 1, bottom: '8px', left: '16px', right: '16px', margin: 0, padding: '10px', borderRadius: '8px', backgroundColor: 'white', fontSize: '12px', color: '#555' }}>
             This station list has no usable coordinates yet.
           </p>
         )}
+        {locationError && <p style={{ position: 'absolute', zIndex: 1, top: '8px', left: '12px', right: '64px', margin: 0, padding: '8px 10px', borderRadius: '8px', backgroundColor: 'rgba(255,255,255,0.94)', fontSize: '12px', color: '#555' }}>{locationError}</p>}
       </div>
 
       <div style={{ display: 'flex', gap: '12px', padding: '12px 20px', backgroundColor: 'white', fontSize: '12px', color: '#555' }}>
