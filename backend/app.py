@@ -283,6 +283,13 @@ def borrow():
         "action": "Borrowed"
     }).execute()
 
+    supabase.table("notifications").insert({
+        "user_id": umbrella["owner_id"],
+        "title": "Umbrella Borrowed",
+        "type": "borrow",
+        "message": "Someone has borrowed your umbrella!"
+    }).execute()
+
     return {
         "message": "Umbrella borrowed successfully",
         "umbrella": {
@@ -384,6 +391,13 @@ def return_umbrella():
         "current_count": station["current_count"] + 1
     }).eq("station_id", location_id).execute()
 
+    supabase.table("notifications").insert({
+        "user_id": umbrella["owner_id"],
+        "type": "return",
+        "title": "Umbrella Returned",
+        "message": f"{umbrella['nickname']} has been returned."
+    }).execute()
+    
     return {
         "message": "Umbrella returned successfully",
         "umbrella": {
@@ -507,6 +521,13 @@ def note():
 
     receiver_id = umbrella["owner_id"]
 
+    supabase.table("notifications").insert({
+        "user_id": receiver_id,
+        "title": "New Thank You Note",
+        "type": "thank-you note",
+        "message": "You received a thank-you note."
+    }).execute()
+
     supabase.table("thank_you_notes").insert({
         "sender_id": sender_id,
         "receiver_id": receiver_id,
@@ -616,6 +637,78 @@ def retrieve_umbrella_stats():
         "journey": journey.data, 
         "notes": notes.data
     }
+
+@app.route('/notifications', methods=["GET"])
+@jwt_required()
+def get_notifications():
+
+    user_id = int(get_jwt_identity())
+
+    active = (
+        supabase.table("borrow_logs")
+        .select("*")
+        .eq("borrower_id", user_id)
+        .eq("status", "Active")
+        .execute()
+    )
+
+    now = datetime.now(timezone.utc)
+
+    if active.data:
+        borrow = active.data[0]
+
+        due_at = datetime.fromisoformat(
+            borrow["due_at"].replace("Z", "+00:00")
+        )
+
+    time_left = due_at - now
+    notification_type = None
+    title = ""
+    message = ""
+
+
+    if now >= due_at + timedelta(hours=6):
+        notification_type = "6_hour"
+        title = "Umbrella Seriously Overdue"
+        message = "Your umbrella has been overdue for more than 6 hours."
+
+    elif now >= due_at:
+        notification_type = "overdue"
+        title = "Umbrella Overdue"
+        message = "Please return your umbrella as soon as possible."
+
+    elif timedelta(0) < time_left <= timedelta(hours=3):
+        notification_type = "3_hour"
+        title = "Umbrella Due Soon"
+        message = "Your umbrella is due in less than 3 hours."
+
+    existing = (
+        supabase.table("notifications")
+        .select("*")
+        .eq("user_id", user_id)
+        .eq("type", notification_type)
+        .eq("borrow_id", borrow["borrow_id"])
+        .execute()
+    )
+
+    if notification_type and not existing.data:
+        supabase.table("notifications").insert({
+            "user_id": user_id,
+            "borrow_id": borrow["borrow_id"],
+            "type": notification_type,
+            "title": title,
+            "message": message
+        }).execute()
+
+    notifications = (
+        supabase.table("notifications")
+        .select("*")
+        .eq("user_id", user_id)
+        .order("created_at", desc=True)
+        .execute()
+    )
+
+    return notifications.data
 
 if __name__ == "__main__":
     app.run(debug=True)
