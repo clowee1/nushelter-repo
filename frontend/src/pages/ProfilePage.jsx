@@ -48,8 +48,6 @@ function ProfilePage() {
             borrowedAt: active.borrowed_at,
             location: stored?.location || ''
           }
-          // The API is the source of truth; cache this confirmed loan so the
-          // return flow can use its umbrella ID after a refresh or app update.
           localStorage.setItem(activeBorrowKey, JSON.stringify(confirmedBorrow))
           setActiveBorrow(confirmedBorrow)
         } else {
@@ -57,7 +55,6 @@ function ProfilePage() {
           localStorage.removeItem(activeBorrowKey)
         }
       } catch (e) {
-        // Never show a cached loan when the authenticated source cannot confirm it.
         setActiveBorrow(null)
       }
       setLoading(false)
