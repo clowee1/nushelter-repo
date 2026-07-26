@@ -654,12 +654,23 @@ def get_notifications():
 
     now = datetime.now(timezone.utc)
 
-    if active.data:
-        borrow = active.data[0]
-
-        due_at = datetime.fromisoformat(
-            borrow["due_at"].replace("Z", "+00:00")
+    if not active.data:
+        notifications = (
+            supabase.table("notifications")
+            .select("*")
+            .eq("user_id", user_id)
+            .order("created_at", desc=True)
+            .execute()
         )
+
+        return notifications.data
+
+
+    borrow = active.data[0]
+
+    due_at = datetime.fromisoformat(
+        borrow["due_at"].replace("Z", "+00:00")
+    )
 
     time_left = due_at - now
     notification_type = None
@@ -691,14 +702,24 @@ def get_notifications():
         .execute()
     )
 
-    if notification_type and not existing.data:
-        supabase.table("notifications").insert({
-            "user_id": user_id,
-            "borrow_id": borrow["borrow_id"],
-            "type": notification_type,
-            "title": title,
-            "message": message
-        }).execute()
+    if notification_type:
+        existing = (
+            supabase.table("notifications")
+            .select("*")
+            .eq("user_id", user_id)
+            .eq("type", notification_type)
+            .eq("borrow_id", borrow["borrow_id"])
+            .execute()
+        )
+
+        if not existing.data:
+            supabase.table("notifications").insert({
+                "user_id": user_id,
+                "borrow_id": borrow["borrow_id"],
+                "type": notification_type,
+                "title": title,
+                "message": message
+            }).execute()
 
     notifications = (
         supabase.table("notifications")
