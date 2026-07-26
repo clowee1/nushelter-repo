@@ -19,6 +19,7 @@ import MapPage from './pages/MapPage'
 import NotificationsPage from './pages/NotificationsPage'
 import PrivacyPage from './pages/PrivacyPage'
 import HelpPage from './pages/HelpPage'
+import NotificationsInboxPage from './pages/NotificationsInboxPage'
 
 function App() {
   return (
@@ -44,6 +45,7 @@ function App() {
         <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/help" element={<HelpPage />} />
+        <Route path="/notifications/inbox" element={<NotificationsInboxPage />} />
       </Routes>
     </BrowserRouter>
   )
