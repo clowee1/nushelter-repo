@@ -40,7 +40,9 @@ def test_return_successful(client):
             {
                 "umbrella_id": 1,
                 "status": "Borrowed",
-                "borrowed_by": 123
+                "borrowed_by": 123,
+                "owner_id": 999,
+                "nickname": "Blue Umbrella"
             }
         ]
 

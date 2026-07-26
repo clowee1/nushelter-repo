@@ -110,14 +110,27 @@ def test_borrow_invalid_umbrella(client):
 
     with patch("app.supabase") as mock_supabase:
 
-        umbrella_result = MagicMock()
+        def table_side_effect(table):
+            mock_table = MagicMock()
 
-        umbrella_result.data = []
+            if table == "borrow_logs":
+                logs = MagicMock()
+                logs.data = []
+                mock_table.select.return_value \
+                    .eq.return_value \
+                    .eq.return_value \
+                    .execute.return_value = logs
 
-        mock_supabase.table.return_value \
-            .select.return_value \
-            .eq.return_value \
-            .execute.return_value = umbrella_result
+            elif table == "umbrellas":
+                umbrellas = MagicMock()
+                umbrellas.data = []
+                mock_table.select.return_value \
+                    .eq.return_value \
+                    .execute.return_value = umbrellas
+
+            return mock_table
+
+        mock_supabase.table.side_effect = table_side_effect
 
         response = client.post(
             "/borrow",
@@ -136,36 +149,49 @@ def test_borrow_suspended_account(client):
 
     with patch("app.supabase") as mock_supabase:
 
-        overdue_log = MagicMock()
+        def table_side_effect(table):
+            mock_table = MagicMock()
 
-        overdue_log.data = [
-            {
-                "borrow_id":1,
-                "due_at":"2020-01-01T00:00:00Z",
-                "status":"Active"
-            }
-        ]
+            if table == "borrow_logs":
+                logs = MagicMock()
+                logs.data = [
+                    {
+                        "borrow_id": 1,
+                        "borrower_id": 123,
+                        "due_at": "2020-01-01T00:00:00Z",
+                        "status": "Active"
+                    }
+                ]
 
-        mock_supabase.table.return_value \
-            .select.return_value \
-            .eq.return_value \
-            .eq.return_value \
-            .execute.return_value = overdue_log
+                mock_table.select.return_value \
+                    .eq.return_value \
+                    .eq.return_value \
+                    .execute.return_value = logs
+
+            elif table == "users":
+                mock_table.update.return_value \
+                    .eq.return_value \
+                    .execute.return_value.data = []
+
+            return mock_table
+
+        mock_supabase.table.side_effect = table_side_effect
 
         response = client.post(
             "/borrow",
             json={
-                "umbrella_id":1
+                "umbrella_id": 1
             },
             headers=auth_header(client)
         )
 
-        assert response.status_code == 403
+        print(response.get_json())
 
+        assert response.status_code == 403
         assert response.get_json()["message"] == (
             "Account suspended due to overdue umbrella."
         )
-
+        
 def test_borrow_already_borrowed(client):
 
     with patch("app.supabase") as mock_supabase:

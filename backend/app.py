@@ -96,8 +96,14 @@ def login():
 
     data = request.get_json()
 
-    email = data["email"]
-    password = data["password"]
+    email = data.get("email", "")
+    password = data.get("password", "")
+
+    if not email:
+        return {"message": "Please enter your email"}, 400
+
+    if not password:
+        return {"message": "Please enter your password"}, 400
 
     result = (supabase.table("users")
                      .select("user_id, name, email, password_hashed")
@@ -213,19 +219,6 @@ def borrow():
     user_id = int(get_jwt_identity())
     umbrella_id = data["umbrella_id"]
 
-    active_borrow = (
-        supabase.table("borrow_logs")
-        .select("*")
-        .eq("borrower_id", user_id)
-        .eq("status", "Active")
-        .execute()
-    )
-
-    if active_borrow.data:
-        return {
-            "message": "You already have an active borrowed umbrella. Please return it before borrowing another."
-        }, 400
-    
     if has_overdue_umbrella(user_id):
 
         supabase.table("users").update({
@@ -238,6 +231,20 @@ def borrow():
         return {
             "message": "Account suspended due to overdue umbrella."
         }, 403
+
+    active_borrow = (
+        supabase.table("borrow_logs")
+        .select("*")
+        .eq("borrower_id", user_id)
+        .eq("status", "Active")
+        .execute()
+    )
+
+    if active_borrow.data:
+        return {
+            "message": "You already have an active borrowed umbrella. Please return it before borrowing another."
+        }, 400
+
  
     result = (
         supabase.table("umbrellas")

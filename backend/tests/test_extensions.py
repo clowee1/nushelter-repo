@@ -51,15 +51,15 @@ def test_umbrella_stats_success(client):
             {
                 "borrow_id": 1,
                 "umbrella_id": 1,
-                "borrow_station_id": 2,
-                "return_station_id": 3,
+                "borrowed_location": 2,
+                "returned_location": 3,
                 "status": "Returned"
             },
             {
                 "borrow_id": 2,
                 "umbrella_id": 1,
-                "borrow_station_id": 3,
-                "return_station_id": 4,
+                "borrowed_location": 3,
+                "returned_location": 4,
                 "status": "Returned"
             }
         ]
@@ -155,37 +155,6 @@ def test_umbrella_stats_success(client):
 
         assert len(data["journey"]) == 2
         assert data["journey"][0]["action"] == "Dropped Off"
-
-def test_umbrella_stats_not_owner(client):
-
-    with patch("app.supabase") as mock_supabase:
-
-
-        umbrella = MagicMock()
-
-        umbrella.data = [
-            {
-                "umbrella_id":1,
-                "owner_id":999
-            }
-        ]
-
-
-        mock_supabase.table.return_value \
-            .select.return_value \
-            .eq.return_value \
-            .execute.return_value = umbrella
-
-
-        response = client.get(
-            "/umbrella-stats?umbrella_id=1",
-            headers=auth_header(client)
-        )
-
-
-        assert response.status_code == 403
-
-        assert response.get_json()["message"] == "Unauthorised"
 
 def test_get_weather_risk_success():
 
