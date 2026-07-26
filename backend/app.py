@@ -212,6 +212,19 @@ def borrow():
 
     user_id = int(get_jwt_identity())
     umbrella_id = data["umbrella_id"]
+
+    active_borrow = (
+        supabase.table("borrow_logs")
+        .select("*")
+        .eq("borrower_id", user_id)
+        .eq("status", "Active")
+        .execute()
+    )
+
+    if active_borrow.data:
+        return {
+            "message": "You already have an active borrowed umbrella. Please return it before borrowing another."
+        }, 400
     
     if has_overdue_umbrella(user_id):
 
@@ -412,13 +425,12 @@ def get_umbrellas():
 
     result = (
         supabase.table("umbrellas")
-        .select("*")
+        .select("""*,stations(name)""")
         .eq("status", "Available")
         .execute()
     )
 
     return result.data
-
 
 def has_overdue_umbrella(user_id):
 
@@ -608,10 +620,20 @@ def retrieve_umbrella_stats():
         return {"message": "Umbrella not found"}, 404
     
     umbrella_data = umbrella.data[0]
-    
-    if umbrella_data["owner_id"] != user_id:
+
+    is_owner = umbrella_data["owner_id"] == user_id
+
+    has_borrowed = (
+        supabase.table("borrow_logs")
+        .select("*")
+        .eq("umbrella_id", umbrella_id)
+        .eq("borrower_id", user_id)
+        .execute()
+    )
+
+    if not is_owner and not has_borrowed.data:
         return {"message": "Unauthorised"}, 403
-    
+        
     created_at = datetime.fromisoformat(
         umbrella_data["created_at"].replace("Z", "+00:00")
     )
