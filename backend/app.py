@@ -705,21 +705,20 @@ def get_notifications():
     title = ""
     message = ""
 
-
-    if now >= due_at + timedelta(hours=6):
-        notification_type = "6_hour"
+    if now >= due_at + timedelta(hours=36):
+        notification_type = "36_hour"
         title = "Umbrella Seriously Overdue"
-        message = "Your umbrella has been overdue for more than 6 hours."
+        message = "Your umbrella has been overdue for more than 36 hours. Please return it immediately."
 
-    elif now >= due_at:
-        notification_type = "overdue"
+    elif now >= due_at + timedelta(hours=24):
+        notification_type = "24_hour"
         title = "Umbrella Overdue"
-        message = "Please return your umbrella as soon as possible."
+        message = "Your umbrella has been overdue for more than 24 hours. Please return it as soon as possible."
 
-    elif timedelta(0) < time_left <= timedelta(hours=3):
-        notification_type = "3_hour"
+    elif timedelta(0) < time_left <= timedelta(hours=6):
+        notification_type = "6_hour"
         title = "Umbrella Due Soon"
-        message = "Your umbrella is due in less than 3 hours."
+        message = "Your umbrella is due in less than 6 hours."
 
     existing = (
         supabase.table("notifications")
