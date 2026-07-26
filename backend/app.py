@@ -487,11 +487,36 @@ def profile():
         .execute()
     )
 
+    returned_logs = [
+        log for log in borrowed.data
+        if log["status"] == "Returned"
+    ]
+
+    total_returned = len(returned_logs)
+    on_time_returns = 0
+
+    for log in returned_logs:
+        due_at = datetime.fromisoformat(
+            log["due_at"].replace("Z", "+00:00")
+        )
+        returned_at = datetime.fromisoformat(
+            log["returned_at"].replace("Z", "+00:00")
+        )
+
+        if returned_at <= due_at:
+                on_time_returns += 1
+
+    if total_returned == 0:
+            on_time_percentage = "0%"
+    else:
+        on_time_percentage = f"{round((on_time_returns / total_returned) * 100)}%"
+
     return {
         "user": user,
         "stats": {
             "donated": len(donated.data),
-            "borrowed": len(borrowed.data)
+            "borrowed": len(borrowed.data),
+            "on_time": on_time_percentage
         }
     }
 
@@ -606,8 +631,11 @@ def retrieve_umbrella_stats():
     locations = set()
 
     for log in borrow_logs.data:
-        locations.add(log["borrow_station_id"])
-        locations.add(log["return_station_id"])
+        if log.get("borrowed_location"):
+            locations.add(log["borrowed_location"])
+
+        if log.get("returned_location"):
+            locations.add(log["returned_location"])
 
     locations_visited = len(locations)
 
@@ -730,6 +758,21 @@ def get_notifications():
     )
 
     return notifications.data
+
+@app.route("/my_umbrellas")
+@jwt_required()
+def my_umbrellas():
+
+    user_id = int(get_jwt_identity())
+
+    result = (
+        supabase.table("umbrellas")
+        .select("*")
+        .eq("owner_id", user_id)
+        .execute()
+    )
+
+    return result.data
 
 if __name__ == "__main__":
     app.run(debug=True)
