@@ -29,10 +29,9 @@ function ProfilePage() {
       } catch (e) {}
 
       try {
-        const res = await fetch('http://127.0.0.1:5000/umbrellas')
+        const res = await fetch('http://127.0.0.1:5000/my_umbrellas', { headers })
         const data = await res.json()
-        const mine = data.filter(u => u.owner_id === user.user_id)
-        setDonatedUmbrellas(mine)
+        setDonatedUmbrellas(data)
       } catch (e) {}
 
       try {
@@ -179,7 +178,7 @@ function ProfilePage() {
             {[
               { value: profileData?.stats?.borrowed ?? '0', label: 'Borrowed' },
               { value: profileData?.stats?.donated ?? '0', label: 'Donated' },
-              { value: '100%', label: 'On time' }
+              { value: profileData?.stats?.on_time ?? '100%', label: 'On time' }
             ].map(stat => (
               <div key={stat.label} style={{ flex: 1, backgroundColor: '#f8f8f8', borderRadius: '8px', padding: '16px', textAlign: 'center' }}>
                 <p style={{ margin: '0 0 4px', fontSize: '20px', fontWeight: '700', color: '#1a3a33' }}>{stat.value}</p>
