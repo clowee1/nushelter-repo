@@ -21,9 +21,9 @@ function NotificationsPage() {
   }
 
   const rows = [
-    { key: 'reminders', title: 'Return reminders', detail: 'Reminders at 6, 24, and 36 hours after borrowing.', alignItems: 'left' },
-    { key: 'availability', title: 'Station availability', detail: 'Updates when nearby racks have umbrellas available.', alignItems: 'left' },
-    { key: 'thankYouNotes', title: 'Thank-you notes', detail: 'Get notified when someone thanks you for an umbrella.', alignItems: 'left' }
+    { key: 'reminders', title: 'Return reminders', detail: 'Reminders at 6, 24, and 36 hours after borrowing.' },
+    { key: 'availability', title: 'Station availability', detail: 'Updates when nearby racks have umbrellas available.' },
+    { key: 'thankYouNotes', title: 'Thank-you notes', detail: 'Get notified when someone thanks you for an umbrella.' }
   ]
 
   return <div style={{ fontFamily: 'sans-serif', minHeight: '100vh', backgroundColor: '#f0f0f0', paddingBottom: '80px' }}>
@@ -33,6 +33,13 @@ function NotificationsPage() {
       <p style={{ margin: 0, opacity: .7, fontSize: '14px' }}>Choose which updates you receive.</p>
     </div>
     <div style={{ padding: '24px', maxWidth: '440px', margin: '0 auto' }}>
+      <div onClick={() => navigate('/notifications/inbox')} style={{ backgroundColor: 'white', borderRadius: '12px', padding: '16px 20px', marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
+        <div>
+          <p style={{ margin: 0, fontWeight: '700', fontSize: '15px' }}>View all notifications</p>
+          <p style={{ margin: 0, fontSize: '12px', color: '#888' }}>See your umbrella activity</p>
+        </div>
+        <span style={{ color: '#ccc' }}>›</span>
+      </div>
       <div style={{ backgroundColor: 'white', borderRadius: '12px', overflow: 'hidden' }}>
         {rows.map((row, index) => <div key={row.key} style={{ padding: '18px 16px', display: 'flex', alignItems: 'center', gap: '14px', borderBottom: index < rows.length - 1 ? '1px solid #eee' : 'none' }}>
           <div style={{ flex: 1 }}><p style={{ margin: '0 0 4px', fontSize: '15px', fontWeight: '700' }}>{row.title}</p><p style={{ margin: 0, fontSize: '12px', color: '#777', lineHeight: 1.4 }}>{row.detail}</p></div>
