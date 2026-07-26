@@ -38,7 +38,7 @@ function BorrowConfirmPage() {
     <div style={{ fontFamily: 'sans-serif', minHeight: '100vh', backgroundColor: '#f0f0f0', paddingBottom: '80px' }}>
       <div style={{ backgroundColor: '#1a3a33', padding: '48px 24px 24px', color: 'white' }}>
         <span onClick={() => navigate(-1)} style={{ cursor: 'pointer', fontSize: '14px', marginBottom: '16px', display: 'block', opacity: 0.8 }}>‹ Back</span>
-        <h1 style={{ margin: '0 0 4px', fontSize: '24px', fontWeight: '700' }}>Confirm Borrow</h1>
+        <h1 style={{ margin: '0 0 4px', fontSize: '24px', fontWeight: '700', color: 'white'}}>Confirm Borrow</h1>
         <p style={{ margin: 0, opacity: 0.7, fontSize: '14px' }}>Review the details before borrowing.</p>
       </div>
 

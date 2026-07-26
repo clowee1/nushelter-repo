@@ -41,33 +41,38 @@ function NotificationsInboxPage() {
     return `${Math.floor(diff / 1440)}d ago`
   }
 
-  const getIcon = (type) => {
-    if (type === 'overdue') return '🚨'
-    if (type === 'due_soon') return '⚠️'
-    if (type === 'thank_you') return '💚'
-    if (type === 'borrowed') return '☂️'
-    if (type === 'returned') return '✅'
+    const getIcon = (type) => {
+    if (type === '24_hour') return '🚨'
+    if (type === '36_hour') return '⚠️'
+    if (type === '6_hour') return '⏰'
+    if (type === 'thank-you note') return '💚'
+    if (type === 'borrow') return '☂️'
+    if (type === 'return') return '✅'
     return '🔔'
-  }
+    }
 
-  const getColor = (type) => {
-    if (type === 'overdue') return '#fee2e2'
-    if (type === 'due_soon') return '#fffbf0'
-    if (type === 'thank_you') return '#f0f5f3'
+    const getColor = (type) => {
+    if (type === '24_hour') return '#fee2e2'
+    if (type === '36_hour') return '#fee2e2'
+    if (type === '6_hour') return '#fffbf0'
+    if (type === 'thank-you note') return '#f0f5f3'
     return 'white'
-  }
+    }
 
-  const getBorderColor = (type) => {
-    if (type === 'overdue') return '#f87171'
-    if (type === 'due_soon') return '#e8d9a0'
-    if (type === 'thank_you') return '#1a3a33'
+    const getBorderColor = (type) => {
+    if (type === '24_hour') return '#f87171'
+    if (type === '36_hour') return '#f87171'
+    if (type === '6_hour') return '#e8d9a0'
+    if (type === 'thank-you note') return '#1a3a33'
+    if (type === 'borrow') return '#1a3a33'
+    if (type === 'return') return '#86efac'
     return '#e0e0e0'
-  }
+    }
 
   return (
     <div style={{ fontFamily: 'sans-serif', minHeight: '100vh', backgroundColor: '#f0f0f0', paddingBottom: '80px' }}>
       <div style={{ backgroundColor: '#1a3a33', padding: '48px 24px 24px', color: 'white' }}>
-        <span onClick={() => navigate('/notifications')} style={{ cursor: 'pointer', fontSize: '14px', marginBottom: '16px', display: 'block', opacity: 0.8 }}>‹ Back</span>
+        <span onClick={() => navigate(-1)} style={{ cursor: 'pointer', fontSize: '14px', marginBottom: '16px', display: 'block', opacity: 0.8 }}>‹ Back</span>
         <h1 style={{ margin: '0 0 4px', fontSize: '24px', fontWeight: '700', color: 'white'}}>Notifications</h1>
         <p style={{ margin: 0, opacity: 0.7, fontSize: '14px' }}>Your umbrella activity updates</p>
       </div>
