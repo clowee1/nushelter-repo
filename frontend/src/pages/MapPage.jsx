@@ -66,7 +66,7 @@ function MapPage() {
   useEffect(() => {
     if (!shareLocation) {
       setUserLocation(null)
-      setLocationError('Location sharing is turned off in Privacy.')
+      setLocationError('Location sharing is turned off in Privacy. To turn on, Profile > Privacy > Share Aprroximate Location.')
       return undefined
     }
 
