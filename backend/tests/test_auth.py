@@ -153,3 +153,43 @@ def test_login_wrong_password(client):
 
         assert response.status_code == 401
         assert response.get_json()["message"] == "Incorrect password"
+
+def test_login_missing_email(client):
+    with patch("app.supabase") as mock_supabase:
+        hashed_password = generate_password_hash("correctpassword")
+
+        mock_supabase.table.return_value.select.return_value.eq.return_value.execute.return_value.data = [
+            {
+                "user_id": 1,
+                "name": "Max Tan",
+                "email": "max.tan@u.nus.edu",
+                "password_hashed": hashed_password
+            }
+        ]
+
+        response = client.post("/login", json={
+            "password": "correctpassword"
+        })
+
+        assert response.status_code == 400
+        assert response.get_json()["message"] == "Please enter your email"
+
+def test_login_missing_password(client):
+    with patch("app.supabase") as mock_supabase:
+        hashed_password = generate_password_hash("correctpassword")
+
+        mock_supabase.table.return_value.select.return_value.eq.return_value.execute.return_value.data = [
+            {
+                "user_id": 1,
+                "name": "Max Tan",
+                "email": "max.tan@u.nus.edu",
+                "password_hashed": hashed_password
+            }
+        ]
+
+        response = client.post("/login", json={
+            "email": "max.tan@u.nus.edu"
+        })
+
+        assert response.status_code == 400
+        assert response.get_json()["message"] == "Please enter your password"
